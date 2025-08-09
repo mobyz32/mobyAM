@@ -175,10 +175,6 @@
       color: #888;
     }
   </style>
-
-  <!-- Firebase SDKs -->
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 </head>
 <body>
 
@@ -232,48 +228,14 @@
 
 <script>
   const NUM_FIELDS = 4;
-  const results = document.getElementById('results');
-  let currentMachine = 'J95';
-
-  // Firebase config and initialization
-  const firebaseConfig = {
-    apiKey: "AIzaSyAXwW14wEzGz5IjetGeWCb0tmU_lkDJqJI",
-    authDomain: "mobyam32.firebaseapp.com",
-    databaseURL: "https://mobyam32-default-rtdb.firebaseio.com",
-    projectId: "mobyam32",
-    storageBucket: "mobyam32.appspot.com",
-    messagingSenderId: "453231570263",
-    appId: "1:453231570263:web:1e219d402146960c502212"
-  };
-  firebase.initializeApp(firebaseConfig);
-  const db = firebase.database();
-
-  // Cache constants in memory for calculation
-  const constantsCache = {};
 
   // Creates inputs for lasers or constants with numeric keypad on mobile
-  async function createInputs(containerId, prefix, labelPrefix, loadSaved = false, machine = '') {
-    let savedConstants = {};
-    if(loadSaved && prefix === 'const') {
-      try {
-        const snapshot = await db.ref('constants/' + machine).get();
-        if(snapshot.exists()) {
-          savedConstants = snapshot.val();
-          constantsCache[machine] = savedConstants;
-        } else {
-          constantsCache[machine] = {};
-        }
-      } catch (e) {
-        console.error('Firebase read error:', e);
-        constantsCache[machine] = {};
-      }
-    }
-
+  function createInputs(containerId, prefix, labelPrefix, loadSaved = false, machine = '') {
     let html = '';
     for(let i=1; i<=NUM_FIELDS; i++) {
       let savedVal = '';
       if(loadSaved && prefix === 'const') {
-        savedVal = savedConstants['const' + i] || '';
+        savedVal = localStorage.getItem(machine + '_const' + i) || '';
       }
       html += `
         <div>
@@ -290,19 +252,11 @@
         </div>`;
     }
     document.getElementById(containerId).innerHTML = html;
-
-    // Add input listeners for laser inputs only
-    if(prefix === 'val') {
-      for(let i=1; i<=NUM_FIELDS; i++) {
-        document.getElementById(prefix + i + '-' + machine).addEventListener('input', () => checkCalculateButton(machine));
-      }
-    }
   }
 
-  // Save constants to Firebase Realtime Database
-  async function saveConstants(machine) {
+  // Save constants to localStorage, keyed by machine
+  function saveConstants(machine) {
     let valid = true;
-    let dataToSave = {};
     for(let i=1; i<=NUM_FIELDS; i++) {
       const input = document.getElementById('const' + i + '-' + machine);
       if(input.value.trim() === '' || isNaN(input.value)) {
@@ -310,26 +264,20 @@
         input.style.borderColor = '#ef4444';
       } else {
         input.style.borderColor = '#ccc';
-        dataToSave['const' + i] = input.value;
+        localStorage.setItem(machine + '_const' + i, input.value);
       }
     }
     if(valid) {
-      try {
-        await db.ref('constants/' + machine).set(dataToSave);
-        constantsCache[machine] = dataToSave;
-        const saveBtn = document.getElementById('saveBtn-' + machine);
-        saveBtn.textContent = 'Saved ✓';
-        setTimeout(() => saveBtn.textContent = 'Save Constants', 1500);
-        checkCalculateButton(machine);
-      } catch (e) {
-        alert('Error saving constants: ' + e.message);
-      }
+      const saveBtn = document.getElementById('saveBtn-' + machine);
+      saveBtn.textContent = 'Saved ✓';
+      setTimeout(() => saveBtn.textContent = 'Save Constants', 1500);
+      checkCalculateButton(machine);
     } else {
       alert('Please fill all constants with valid numbers.');
     }
   }
 
-  // Enable/disable calculate button based on laser input validation
+  // Enable/disable calculate button based on input validation
   function checkCalculateButton(machine) {
     let allFilled = true;
     for(let i=1; i<=NUM_FIELDS; i++) {
@@ -347,16 +295,15 @@
   // Calculate difference (Laser value - Calibration constant) for selected machine
   function calculate(machine) {
     let output = '';
-    const consts = constantsCache[machine] || {};
     for(let i=1; i<=NUM_FIELDS; i++) {
-      const c = parseFloat(consts['const' + i] || 0);
+      const c = parseFloat(localStorage.getItem(machine + '_const' + i) || 0);
       const v = parseFloat(document.getElementById('val' + i + '-' + machine).value);
       const diff = v - c;
       output += `${machine} Laser ${i}: <b>${diff.toFixed(2)}</b><br>\n`;
     }
     results.style.opacity = 0;
     setTimeout(() => {
-      results.innerHTML = output.trim();
+      results.innerHTML = output.trim(); // Use innerHTML to render <b> tags
       results.style.opacity = 1;
     }, 150);
   }
@@ -418,18 +365,13 @@
     currentMachine = tabId.replace('tab-', '');
     // Reset results when switching machines
     results.textContent = '';
-
-    // Initialize inputs for the newly activated tab/machine
-    // (laser inputs are recreated so attach listeners again)
-    createInputs('valueInputs-' + currentMachine, 'val', 'Laser', false, currentMachine);
-    checkCalculateButton(currentMachine);
   }
 
   // Initialize inputs, event listeners, collapsibles, tabs
-  async function init() {
-    for (const machine of ['J95', 'J149']) {
-      await createInputs('constInputs-' + machine, 'const', 'Calibration Constant', true, machine);
-      await createInputs('valueInputs-' + machine, 'val', 'Laser', false, machine);
+  function init() {
+    ['J95', 'J149'].forEach(machine => {
+      createInputs('constInputs-' + machine, 'const', 'Calibration Constant', true, machine);
+      createInputs('valueInputs-' + machine, 'val', 'Laser', false, machine);
 
       for(let i=1; i<=NUM_FIELDS; i++) {
         document.getElementById('val' + i + '-' + machine).addEventListener('input', () => checkCalculateButton(machine));
@@ -437,14 +379,17 @@
 
       checkCalculateButton(machine);
       setupCollapsible(machine);
-    }
+    });
 
     setupTabs();
   }
+
+  let currentMachine = 'J95';
+
+  const results = document.getElementById('results');
 
   init();
 </script>
 
 </body>
 </html>
-
