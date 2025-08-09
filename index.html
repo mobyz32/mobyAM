@@ -110,7 +110,7 @@
   import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
   import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
-  // Your provided config
+  // Your config
   const firebaseConfig = {
     apiKey: "AIzaSyAXwW14wEzGz5IjetGeWCb0tmU_lkDJqJI",
     authDomain: "mobyam32.firebaseapp.com",
@@ -126,6 +126,14 @@
   const NUM_FIELDS = 4;
   let currentMachine = 'J95';
   const results = document.getElementById('results');
+
+  const monthNames = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+  function formatDate(d) {
+    const day = String(d.getDate()).padStart(2, '0');
+    const mon = monthNames[d.getMonth()];
+    const yr = d.getFullYear();
+    return `${day} ${mon} ${yr}`;
+  }
 
   // Creates inputs for lasers or constants with numeric keypad on mobile
   function createInputs(containerId, prefix, labelPrefix, loadSaved = false, machine = '') {
@@ -172,12 +180,14 @@
       return;
     }
 
-    // Cloud save
+    // Cloud save with lastUpdated timestamp
     const statusEl = document.getElementById('cloudStatus-' + machine);
     try {
       statusEl.textContent = 'Saving to cloud…';
-      await setDoc(doc(db, "constants", machine), constants, { merge: true });
-      statusEl.textContent = 'Saved to cloud ✓';
+      const nowIso = new Date().toISOString();
+      await setDoc(doc(db, "constants", machine), { ...constants, lastUpdated: nowIso }, { merge: true });
+      const when = formatDate(new Date(nowIso));
+      statusEl.textContent = `Updated ${when}`;
     } catch (e) {
       statusEl.textContent = 'Cloud save failed (using local values).';
       console.error(e);
@@ -203,7 +213,13 @@
             localStorage.setItem(machine + '_const' + i, String(val));
           }
         }
-        statusEl.textContent = 'Loaded from cloud ✓';
+        // Show lastUpdated if present
+        if (data.lastUpdated) {
+          const d = new Date(data.lastUpdated);
+          statusEl.textContent = `Updated ${formatDate(d)}`;
+        } else {
+          statusEl.textContent = 'Updated ' + formatDate(new Date());
+        }
       } else {
         statusEl.textContent = 'No cloud values yet (using local if any).';
       }
@@ -321,6 +337,7 @@
     setupTabs();
   }
 
+  // expose to global for onclick handlers
   window.calculate = calculate;
   window.saveConstants = saveConstants;
 
