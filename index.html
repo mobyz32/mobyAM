@@ -189,17 +189,34 @@
     el.value = (parseInt(digits,10)/100).toFixed(2);
     el.dispatchEvent(new Event('input', {bubbles:true}));
   }
-  function attachBankFormatter(inputEl){
-    inputEl.addEventListener('focus', ()=>{
-      setActiveBuffer(inputEl);
-      setTimeout(()=> inputEl.select(), 0);
-    });
-    inputEl.addEventListener('click', ()=> setActiveBuffer(inputEl));
-    inputEl.addEventListener('input', ()=>{
-      inputEl.dataset.digits = (inputEl.value || '').replace(/\D/g,'');
-      updateFromDigits(inputEl);
-    });
+  function attachBankFormatter(inputEl, maxDigits = 6) {
+  function reformat() {
+    // keep only digits the user typed (works for typing & paste)
+    let digits = (inputEl.value || '').replace(/\D/g, '');
+    if (!digits) { inputEl.value = ''; return; }
+
+    // hard limit to maxDigits (e.g., 6 -> 999999 -> 9999.99 after /100)
+    if (digits.length > maxDigits) digits = digits.slice(0, maxDigits);
+
+    // format as “last two digits are decimals”
+    inputEl.value = (parseInt(digits, 10) / 100).toFixed(2);
   }
+
+  // block extra digit keystrokes proactively (optional UX nicety)
+  inputEl.addEventListener('beforeinput', (e) => {
+    if (e.inputType === 'insertText' && /\d/.test(e.data)) {
+      const digits = (inputEl.value || '').replace(/\D/g, '');
+      if (digits.length >= maxDigits && inputEl.selectionStart === inputEl.selectionEnd) {
+        e.preventDefault(); // already at limit and not replacing selection
+      }
+    }
+  });
+
+  inputEl.addEventListener('input', reformat);
+
+  // select-all on focus (nice for quick overwrite)
+  inputEl.addEventListener('focus', () => setTimeout(() => inputEl.select(), 0));
+}
 
   // Append "00" into the currently focused LASER field for this machine
   function insertDoubleZero(machine){
