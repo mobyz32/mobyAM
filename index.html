@@ -6,10 +6,8 @@
   <title>AM Machine Calculator</title>
   <style>
     :root{
-      --primary:#F89728; --primary-hover:#d97f1f;
-      --text:#111827; --label:#6B7280;
-      --panel:#F3F4F6; --page:#FFFFFF;
-      --ring: rgba(248,151,40,.45); --shadow: rgba(248,151,40,.35);
+      --primary:#F89728; --primary-hover:#d97f1f; --text:#111827; --label:#6B7280;
+      --panel:#F3F4F6; --page:#FFFFFF; --ring:rgba(248,151,40,.45); --shadow:rgba(248,151,40,.35);
     }
     *,*::before,*::after{ box-sizing:border-box; }
     body{
@@ -20,63 +18,38 @@
     h2{ font-weight:700; font-size:1.8rem; text-align:center; margin-bottom:1.5rem; color:var(--text); }
     .tabs{ display:flex; justify-content:center; margin-bottom:2rem; gap:16px; user-select:none; }
     .tab{
-      padding:10px 20px; font-weight:600; font-size:1.05rem; border-radius:24px; border:2px solid transparent;
-      cursor:pointer; color:var(--label); transition:all .25s ease; background:#fff; min-width:80px; text-align:center;
-      box-shadow:0 2px 6px rgba(0,0,0,.06);
+      padding:10px 20px; font-weight:600; font-size:1.05rem; border-radius:24px; border:2px solid transparent; cursor:pointer;
+      color:var(--label); transition:all .25s ease; background:#fff; min-width:80px; text-align:center; box-shadow:0 2px 6px rgba(0,0,0,.06);
     }
     .tab:hover{ color:var(--primary); border-color:var(--primary); }
     .tab.active{ color:#fff; background:var(--primary); border-color:var(--primary); box-shadow:0 6px 14px var(--shadow); cursor:default; }
     section{ margin-bottom:2rem; }
-
     h3,.collapsible-toggle{
       font-weight:600; font-size:1.05rem; margin-bottom:1rem; color:var(--text);
-      border-bottom:1px solid #E5E7EB; padding-bottom:.35rem; user-select:none;
-      display:flex; justify-content:space-between; align-items:center;
+      border-bottom:1px solid #E5E7EB; padding-bottom:.35rem; cursor:pointer;
+      user-select:none; display:flex; justify-content:space-between; align-items:center;
     }
-
     .input-group{ display:grid; grid-template-columns:repeat(2,1fr); gap:12px 16px; }
     label{ display:block; font-weight:600; font-size:.85rem; color:var(--label); margin-bottom:4px; }
-
     input[type="text"]{
       width:100%; padding:10px 12px; font-size:1rem; border:1.5px solid #D1D5DB; border-radius:8px;
-      transition:border-color .2s ease, box-shadow .2s ease, background .2s ease;
-      background:var(--panel); color:var(--text);
+      transition:border-color .2s ease, box-shadow .2s ease, background .2s ease; background:var(--panel); color:var(--text);
     }
-    input[type="text"]:focus{
-      outline:none; border-color:var(--primary); background:#fff; box-shadow:0 0 0 4px var(--ring);
-    }
-
+    input[type="text"]:focus{ outline:none; border-color:var(--primary); background:#fff; box-shadow:0 0 0 4px var(--ring); }
     button{
       width:100%; background:var(--primary); color:#fff; border:none; padding:14px 0; border-radius:10px;
       font-weight:700; font-size:1.05rem; cursor:pointer; transition:transform .06s ease, background .2s ease, box-shadow .2s ease;
       user-select:none; margin-top:1.2rem; box-shadow:0 8px 18px var(--shadow);
     }
-    button:active{ transform: translateY(1px); }
+    button:active{ transform:translateY(1px); }
     button:disabled{ background:#FCD7AE; cursor:not-allowed; box-shadow:none; }
     button:not(:disabled):hover{ background:var(--primary-hover); box-shadow:0 10px 22px var(--shadow); }
-
-    /* tiny pill .00 button row (right aligned) */
-    .row-right{
-      display:flex; justify-content:flex-end; align-items:center; margin-top:6px; margin-bottom:6px;
-    }
-    .tiny-chip{
-      font: inherit; font-weight:700;
-      padding:6px 10px; line-height:1; border-radius:999px;
-      background:#fff; color:var(--primary); border:2px solid var(--primary);
-      cursor:pointer; user-select:none;
-      transition:background .15s ease, color .15s ease, box-shadow .2s ease, transform .06s ease;
-      box-shadow:0 2px 6px rgba(0,0,0,.05);
-    }
-    .tiny-chip:hover{ background:#FFF7EE; }
-    .tiny-chip:active{ transform: translateY(1px); }
-
     #results{
       padding:18px 20px; font-size:1.05rem; color:var(--text); background:#fff; border:1px solid #E5E7EB;
       border-radius:10px; box-shadow:0 6px 14px rgba(0,0,0,.05); min-height:68px; white-space:pre-wrap;
       font-family:'Segoe UI Mono', Consolas, monospace; user-select:text; transition:opacity .25s ease;
     }
     #results b{ color:var(--primary-hover); }
-
     .collapsed .arrow{ transform:rotate(-90deg); }
     .collapsible-content{ overflow:hidden; max-height:0; transition:max-height .3s ease, opacity .3s ease; pointer-events:none; opacity:0; user-select:none; }
     .collapsible-content.open{ max-height:600px; opacity:1; pointer-events:auto; user-select:auto; }
@@ -98,18 +71,11 @@
   <section aria-labelledby="lasers-header-J95">
     <h3 id="lasers-header-J95">Enter Laser Values</h3>
     <div class="input-group" id="valueInputs-J95" role="group" aria-label="Laser input fields for J95"></div>
-
-    <!-- NEW: tiny .00 pill above Calculate -->
-    <div class="row-right">
-      <button type="button" class="tiny-chip" id="chip00-J95" aria-label="Append double zero to current laser field">.00</button>
-    </div>
-
     <button id="calcBtn-J95" type="button" onclick="calculate('J95')" disabled>Calculate</button>
   </section>
-
   <section aria-labelledby="calibration-header-J95">
     <div class="collapsible-toggle collapsed" id="calibration-header-J95" tabindex="0" role="button" aria-expanded="false" aria-controls="constContent-J95">
-      <span>Calibration Constants</span> <span class="arrow">▶</span>
+      Calibration Constants <span class="arrow">▶</span>
     </div>
     <div id="constContent-J95" class="collapsible-content" role="region" aria-hidden="true">
       <div class="input-group" id="constInputs-J95" role="group" aria-label="Calibration constants input fields for J95"></div>
@@ -124,18 +90,11 @@
   <section aria-labelledby="lasers-header-J149">
     <h3 id="lasers-header-J149">Enter Laser Values</h3>
     <div class="input-group" id="valueInputs-J149" role="group" aria-label="Laser input fields for J149"></div>
-
-    <!-- NEW: tiny .00 pill above Calculate -->
-    <div class="row-right">
-      <button type="button" class="tiny-chip" id="chip00-J149" aria-label="Append double zero to current laser field">.00</button>
-    </div>
-
     <button id="calcBtn-J149" type="button" onclick="calculate('J149')" disabled>Calculate</button>
   </section>
-
   <section aria-labelledby="calibration-header-J149">
     <div class="collapsible-toggle collapsed" id="calibration-header-J149" tabindex="0" role="button" aria-expanded="false" aria-controls="constContent-J149">
-      <span>Calibration Constants</span> <span class="arrow">▶</span>
+      Calibration Constants <span class="arrow">▶</span>
     </div>
     <div id="constContent-J149" class="collapsible-content" role="region" aria-hidden="true">
       <div class="input-group" id="constInputs-J149" role="group" aria-label="Calibration constants input fields for J149"></div>
@@ -166,253 +125,205 @@
   const app = initializeApp(firebaseConfig);
   const db = getFirestore(app);
 
-  /***** APP LOGIC *****/
+  /***** CONFIG / HELPERS *****/
+  const MACHINES = ['J95','J149'];
   const NUM_FIELDS = 4;
-  const MAX_DIGITS = 10; // cap for raw digits buffer
-  let currentMachine = 'J95';
-  let activeInput = null; // currently focused laser/const input
-  const results = document.getElementById('results');
-
+  const MAX_DIGITS = 6; // -> 9999.99 max
   const monthNames = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
-  function formatDate(d){ return `${String(d.getDate()).padStart(2,'0')} ${monthNames[d.getMonth()]} ${d.getFullYear()}`; }
+  const $ = (sel, root=document) => root.querySelector(sel);
 
-  // raw digits buffer for bank-style formatting
-  function setActiveBuffer(el){
-    if (!el.dataset.digits) {
-      el.dataset.digits = (el.value || '').replace(/\D/g,'');
-    }
-    activeInput = el;
-  }
-  function updateFromDigits(el){
-    const digits = (el.dataset.digits || '').replace(/\D/g,'');
-    if(!digits){ el.value=''; return; }
-    el.value = (parseInt(digits,10)/100).toFixed(2);
-    el.dispatchEvent(new Event('input', {bubbles:true}));
-  }
-  function attachBankFormatter(inputEl, maxDigits = 6) {
-  function reformat() {
-    // keep only digits the user typed (works for typing & paste)
-    let digits = (inputEl.value || '').replace(/\D/g, '');
-    if (!digits) { inputEl.value = ''; return; }
+  const results = $('#results');
 
-    // hard limit to maxDigits (e.g., 6 -> 999999 -> 9999.99 after /100)
-    if (digits.length > maxDigits) digits = digits.slice(0, maxDigits);
+  const formatDate = (d) =>
+    `${String(d.getDate()).padStart(2,'0')} ${monthNames[d.getMonth()]} ${d.getFullYear()}`;
 
-    // format as “last two digits are decimals”
-    inputEl.value = (parseInt(digits, 10) / 100).toFixed(2);
-  }
+  const setStatus = (machine, text) => {
+    const el = $(`#cloudStatus-${machine}`);
+    if (el) el.textContent = text;
+  };
 
-  // block extra digit keystrokes proactively (optional UX nicety)
-  inputEl.addEventListener('beforeinput', (e) => {
-    if (e.inputType === 'insertText' && /\d/.test(e.data)) {
-      const digits = (inputEl.value || '').replace(/\D/g, '');
-      if (digits.length >= maxDigits && inputEl.selectionStart === inputEl.selectionEnd) {
-        e.preventDefault(); // already at limit and not replacing selection
+  // Bank-style formatter with max-digit cap
+  function attachBankFormatter(inputEl, maxDigits = MAX_DIGITS){
+    // prevent exceeding cap on type (not required, but nicer UX)
+    inputEl.addEventListener('beforeinput', (e) => {
+      if (e.inputType === 'insertText' && /\d/.test(e.data)) {
+        const digits = (inputEl.value || '').replace(/\D/g, '');
+        const selection = inputEl.selectionStart !== inputEl.selectionEnd ? 0 : 1; // allow replacing selection
+        if (digits.length + selection > maxDigits) e.preventDefault();
       }
-    }
-  });
-
-  inputEl.addEventListener('input', reformat);
-
-  // select-all on focus (nice for quick overwrite)
-  inputEl.addEventListener('focus', () => setTimeout(() => inputEl.select(), 0));
-}
-
-  // Append "00" into the currently focused LASER field for this machine
-  function insertDoubleZero(machine){
-    // Ensure focus is on a laser input for the right machine
-    if(!activeInput || !activeInput.id.startsWith('val') ||
-       !activeInput.closest(`#machine-${machine}`)){
-      const first = document.getElementById(`val1-${machine}`);
-      if(!first) return;
-      first.focus(); setActiveBuffer(first);
-    }
-    const cur = activeInput.dataset.digits || '';
-    if(cur.length + 2 <= MAX_DIGITS){
-      activeInput.dataset.digits = cur + '00';
-      updateFromDigits(activeInput);
-    }
+    });
+    inputEl.addEventListener('input', () => {
+      let digits = (inputEl.value || '').replace(/\D/g,'');
+      if (!digits) { inputEl.value = ''; return; }
+      if (digits.length > maxDigits) digits = digits.slice(0, maxDigits);
+      inputEl.value = (parseInt(digits,10) / 100).toFixed(2);
+    });
+    inputEl.addEventListener('focus', () => setTimeout(() => inputEl.select(), 0));
   }
 
-  // Build inputs
-  function createInputs(containerId, prefix, labelPrefix, loadSaved=false, machine=''){
-    let html='';
+  function getMachineFromUrl(){
+    const m = (new URLSearchParams(window.location.search).get('m') || '').toUpperCase();
+    return MACHINES.includes(m) ? m : null;
+  }
+
+  // Renders inputs and attaches formatter
+  function renderInputs(containerId, prefix, labelPrefix, loadSaved, machine){
+    const container = document.getElementById(containerId);
+    const parts = [];
     for(let i=1;i<=NUM_FIELDS;i++){
-      let savedVal='';
-      if(loadSaved && prefix==='const'){ savedVal = localStorage.getItem(machine+'_const'+i) || ''; }
-      const id = `${prefix}${i}-${machine}`;
-      html += `
+      const saved = loadSaved && prefix==='const'
+        ? (localStorage.getItem(`${machine}_const${i}`) || '')
+        : '';
+      parts.push(`
         <div>
-          <label for="${id}">${labelPrefix} ${i}</label>
-          <input type="text" inputmode="numeric" pattern="[0-9]*" id="${id}" placeholder="${labelPrefix} ${i}" value="${savedVal}" />
-        </div>`;
+          <label for="${prefix}${i}-${machine}">${labelPrefix} ${i}</label>
+          <input type="text" inputmode="numeric" pattern="[0-9]*"
+                 id="${prefix}${i}-${machine}" placeholder="${labelPrefix} ${i}" value="${saved}" />
+        </div>`);
     }
-    document.getElementById(containerId).innerHTML = html;
-
+    container.innerHTML = parts.join('');
     for(let i=1;i<=NUM_FIELDS;i++){
-      const id = `${prefix}${i}-${machine}`;
-      attachBankFormatter(document.getElementById(id));
+      attachBankFormatter(document.getElementById(`${prefix}${i}-${machine}`), MAX_DIGITS);
     }
   }
 
-  // Save constants to localStorage & Firestore
   async function saveConstants(machine){
-    let valid=true; const constants={};
+    let valid = true;
+    const docRef = doc(db, "constants", machine);
+    const constants = {};
     for(let i=1;i<=NUM_FIELDS;i++){
-      const input = document.getElementById('const'+i+'-'+machine);
-      setActiveBuffer(input); updateFromDigits(input); // normalize
-      if(input.value.trim()==='' || isNaN(parseFloat(input.value))){
-        valid=false; input.style.borderColor='#ef4444';
-      }else{
-        input.style.borderColor='#D1D5DB';
-        const val = parseFloat(input.value);
-        localStorage.setItem(machine+'_const'+i, val.toFixed(2));
-        constants['c'+i]=val;
+      const el = document.getElementById(`const${i}-${machine}`);
+      const val = parseFloat(el.value);
+      if (isNaN(val)) { valid=false; el.style.borderColor='#ef4444'; }
+      else {
+        el.style.borderColor='#D1D5DB';
+        localStorage.setItem(`${machine}_const${i}`, val.toFixed(2));
+        constants[`c${i}`] = val;
       }
     }
     if(!valid){ alert('Please fill all constants with valid numbers.'); return; }
 
-    const statusEl = document.getElementById('cloudStatus-'+machine);
     try{
-      statusEl.textContent='Saving to cloud…';
+      setStatus(machine, 'Saving to cloud…');
       const nowIso = new Date().toISOString();
-      await setDoc(doc(db,"constants",machine), { ...constants, lastUpdated: nowIso }, { merge:true });
-      statusEl.textContent = `Updated ${formatDate(new Date(nowIso))}`;
+      await setDoc(docRef, { ...constants, lastUpdated: nowIso }, { merge:true });
+      setStatus(machine, `Updated ${formatDate(new Date(nowIso))}`);
     }catch(e){
-      statusEl.textContent='Cloud save failed (using local values).';
-      console.error(e);
+      setStatus(machine, 'Cloud save failed (using local values).'); console.error(e);
     }
 
-    const saveBtn = document.getElementById('saveBtn-'+machine);
-    saveBtn.textContent='Saved ✓';
-    setTimeout(()=> saveBtn.textContent='Save Constants', 1500);
+    const btn = document.getElementById(`saveBtn-${machine}`);
+    btn.textContent = 'Saved ✓';
+    setTimeout(() => btn.textContent = 'Save Constants', 1500);
     checkCalculateButton(machine);
   }
 
-  // Load constants from Firestore → fall back to local
   async function loadConstants(machine){
-    const statusEl = document.getElementById('cloudStatus-'+machine);
+    const docRef = doc(db, "constants", machine);
     try{
-      statusEl.textContent='Loading from cloud…';
-      const snap = await getDoc(doc(db,"constants",machine));
-      if(snap.exists()){
+      setStatus(machine, 'Loading from cloud…');
+      const snap = await getDoc(docRef);
+      if (snap.exists()){
         const data = snap.data();
         for(let i=1;i<=NUM_FIELDS;i++){
-          const val = data['c'+i];
-          if(typeof val==='number'){ localStorage.setItem(machine+'_const'+i, String(val.toFixed(2))); }
+          const v = data[`c${i}`];
+          if (typeof v === 'number') localStorage.setItem(`${machine}_const${i}`, v.toFixed(2));
         }
-        statusEl.textContent = `Updated ${formatDate(new Date(data.lastUpdated || Date.now()))}`;
-      }else{
-        statusEl.textContent='No cloud values yet (using local if any).';
+        const stamp = data.lastUpdated ? new Date(data.lastUpdated) : new Date();
+        setStatus(machine, `Updated ${formatDate(stamp)}`);
+      } else {
+        setStatus(machine, 'No cloud values yet (using local if any).');
       }
     }catch(e){
-      statusEl.textContent='Cloud load failed (using local if any).';
-      console.error(e);
+      setStatus(machine, 'Cloud load failed (using local if any).'); console.error(e);
     }
-    // refresh constants UI and reattach formatters
-    createInputs('constInputs-'+machine,'const','Calibration Constant',true,machine);
+    // Re-render constants with (possibly) updated local values
+    renderInputs(`constInputs-${machine}`, 'const', 'Calibration Constant', true, machine);
   }
 
   function checkCalculateButton(machine){
-    let allFilled=true;
+    let ok = true;
     for(let i=1;i<=NUM_FIELDS;i++){
-      const input=document.getElementById('val'+i+'-'+machine);
-      if(input.value.trim()==='' || isNaN(parseFloat(input.value))){
-        allFilled=false; input.style.borderColor='#ef4444';
-      }else{
-        input.style.borderColor='#D1D5DB';
-      }
+      const v = parseFloat(($(`#val${i}-${machine}`)?.value)||'');
+      if (isNaN(v)) { ok=false; $(`#val${i}-${machine}`).style.borderColor='#ef4444'; }
+      else { $(`#val${i}-${machine}`).style.borderColor='#D1D5DB'; }
     }
-    document.getElementById('calcBtn-'+machine).disabled=!allFilled;
+    $(`#calcBtn-${machine}`).disabled = !ok;
   }
 
   function calculate(machine){
-    let output='';
+    let out = '';
     for(let i=1;i<=NUM_FIELDS;i++){
-      const c=parseFloat(localStorage.getItem(machine+'_const'+i) || 0);
-      const vEl=document.getElementById('val'+i+'-'+machine);
-      setActiveBuffer(vEl); updateFromDigits(vEl); // normalize
-      const v=parseFloat(vEl.value || 0);
-      const diff=v-c;
-      output += `${machine} Laser ${i}: <b>${diff.toFixed(2)}</b><br>\n`;
+      const c = parseFloat(localStorage.getItem(`${machine}_const${i}`) || '0');
+      const v = parseFloat(($(`#val${i}-${machine}`)?.value) || '0');
+      out += `${machine} Laser ${i}: <b>${(v - c).toFixed(2)}</b><br>\n`;
     }
     results.style.opacity=0;
-    setTimeout(()=>{ results.innerHTML=output.trim(); results.style.opacity=1; },150);
+    setTimeout(()=>{ results.innerHTML = out.trim(); results.style.opacity=1; }, 150);
   }
 
   function setupCollapsible(machine){
-    const toggleHeader=document.getElementById('calibration-header-'+machine);
-    const collapsibleContent=document.getElementById('constContent-'+machine);
-    const arrow=toggleHeader.querySelector('.arrow');
-    function toggleConstants(){
-      const expanded=toggleHeader.getAttribute('aria-expanded')==='true';
-      toggleHeader.setAttribute('aria-expanded', String(!expanded));
-      collapsibleContent.classList.toggle('open');
-      toggleHeader.classList.toggle('collapsed');
+    const header = document.getElementById(`calibration-header-${machine}`);
+    const panel  = document.getElementById(`constContent-${machine}`);
+    const arrow  = header.querySelector('.arrow');
+    const toggle = () => {
+      const expanded = header.getAttribute('aria-expanded') === 'true';
+      header.setAttribute('aria-expanded', String(!expanded));
+      panel.classList.toggle('open');
+      header.classList.toggle('collapsed');
       arrow.textContent = expanded ? '▶' : '▼';
-    }
-    toggleHeader.addEventListener('click', toggleConstants);
-    toggleHeader.addEventListener('keydown', e=>{
-      if(e.key==='Enter'||e.key===' '){ e.preventDefault(); toggleConstants(); }
-    });
+    };
+    header.addEventListener('click', toggle);
+    header.addEventListener('keydown', e => { if(['Enter',' '].includes(e.key)){ e.preventDefault(); toggle(); } });
   }
 
   function setupTabs(){
-    const tabs=document.querySelectorAll('.tab');
+    const tabs = document.querySelectorAll('.tab');
     tabs.forEach(tab=>{
-      tab.addEventListener('click',()=>{ activateTab(tab.id); });
+      tab.addEventListener('click', ()=> activateTab(tab.id));
       tab.addEventListener('keydown', e=>{
-        if(e.key==='ArrowRight'||e.key==='ArrowLeft'){
+        if(e.key==='ArrowRight' || e.key==='ArrowLeft'){
           e.preventDefault();
-          let index=Array.from(tabs).indexOf(document.activeElement);
-          index = (e.key==='ArrowRight') ? (index+1)%tabs.length : (index-1+tabs.length)%tabs.length;
-          tabs[index].focus(); activateTab(tabs[index].id);
+          const arr=[...tabs]; let idx = arr.indexOf(document.activeElement);
+          idx = (e.key==='ArrowRight') ? (idx+1)%arr.length : (idx-1+arr.length)%arr.length;
+          arr[idx].focus(); activateTab(arr[idx].id);
         }
       });
     });
   }
+
   function activateTab(tabId){
-    const tabs=document.querySelectorAll('.tab');
-    tabs.forEach(tab=>{
-      const isActive=(tab.id===tabId);
+    document.querySelectorAll('.tab').forEach(tab=>{
+      const isActive = (tab.id === tabId);
       tab.classList.toggle('active', isActive);
       tab.setAttribute('aria-selected', isActive);
       tab.setAttribute('tabindex', isActive ? '0' : '-1');
-      const panelId=tab.getAttribute('aria-controls');
-      const panel=document.getElementById(panelId);
-      if(panel) panel.hidden=!isActive;
+      const panel = document.getElementById(tab.getAttribute('aria-controls'));
+      if(panel) panel.hidden = !isActive;
     });
-    currentMachine = tabId.replace('tab-','');
     results.textContent='';
   }
 
-  function setupChipButtons(){
-    document.getElementById('chip00-J95').addEventListener('click', ()=> insertDoubleZero('J95'));
-    document.getElementById('chip00-J149').addEventListener('click', ()=> insertDoubleZero('J149'));
-  }
-
   async function init(){
-    ['J95','J149'].forEach(machine=>{
-      createInputs('valueInputs-'+machine,'val','Laser',false,machine);
-      createInputs('constInputs-'+machine,'const','Calibration Constant',true,machine);
-
-      // validation for lasers
+    MACHINES.forEach(machine=>{
+      renderInputs(`constInputs-${machine}`, 'const', 'Calibration Constant', true, machine);
+      renderInputs(`valueInputs-${machine}`, 'val', 'Laser', false, machine);
       for(let i=1;i<=NUM_FIELDS;i++){
-        const valEl=document.getElementById('val'+i+'-'+machine);
-        valEl.addEventListener('input', ()=> checkCalculateButton(machine));
+        $(`#val${i}-${machine}`).addEventListener('input', () => checkCalculateButton(machine));
       }
       checkCalculateButton(machine);
       setupCollapsible(machine);
       loadConstants(machine);
     });
-    setupTabs();
-    setupChipButtons();
 
-    // Default focus first laser on first machine
-    const first = document.getElementById('val1-J95');
-    if(first){ first.focus(); setActiveBuffer(first); }
+    setupTabs();
+
+    // Deep-link via ?m=
+    const m = getMachineFromUrl() || 'J95';
+    activateTab(`tab-${m}`);
   }
 
+  // expose for onclick
   window.calculate = calculate;
   window.saveConstants = saveConstants;
 
