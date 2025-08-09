@@ -5,175 +5,51 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>AM Machine Calculator</title>
   <style>
-    *, *::before, *::after {
-      box-sizing: border-box;
-    }
+    *, *::before, *::after { box-sizing: border-box; }
     body {
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      max-width: 420px;
-      margin: 48px auto;
-      padding: 24px 16px 32px;
-      background: #fff;
-      color: #222;
-      line-height: 1.4;
-      user-select: none;
+      max-width: 420px; margin: 48px auto; padding: 24px 16px 32px;
+      background: #fff; color: #222; line-height: 1.4; user-select: none;
     }
-    h2 {
-      font-weight: 700;
-      font-size: 1.8rem;
-      text-align: center;
-      margin-bottom: 1.5rem;
-      color: #111;
-    }
-    /* Tabs container */
-    .tabs {
-      display: flex;
-      justify-content: center;
-      margin-bottom: 2rem;
-      gap: 16px;
-      user-select: none;
-    }
-    .tab {
-      padding: 10px 20px;
-      font-weight: 600;
-      font-size: 1.1rem;
-      border-radius: 24px;
-      border: 2px solid transparent;
-      cursor: pointer;
-      color: #666;
-      transition: all 0.3s ease;
-      background: #f9fafb;
-      min-width: 80px;
-      text-align: center;
-    }
-    .tab:hover {
-      color: #3b82f6;
-    }
-    .tab.active {
-      color: #fff;
-      background: #3b82f6;
-      border-color: #3b82f6;
-      box-shadow: 0 4px 10px #3b82f6bb;
-      cursor: default;
-    }
-    section {
-      margin-bottom: 2rem;
-    }
+    h2 { font-weight: 700; font-size: 1.8rem; text-align: center; margin-bottom: 1.5rem; color: #111; }
+    .tabs { display: flex; justify-content: center; margin-bottom: 2rem; gap: 16px; user-select: none; }
+    .tab { padding: 10px 20px; font-weight: 600; font-size: 1.1rem; border-radius: 24px; border: 2px solid transparent; cursor: pointer; color: #666; transition: all 0.3s ease; background: #f9fafb; min-width: 80px; text-align: center; }
+    .tab:hover { color: #3b82f6; }
+    .tab.active { color: #fff; background: #3b82f6; border-color: #3b82f6; box-shadow: 0 4px 10px #3b82f6bb; cursor: default; }
+    section { margin-bottom: 2rem; }
     h3, .collapsible-toggle {
-      font-weight: 600;
-      font-size: 1.1rem;
-      margin-bottom: 1rem;
-      color: #444;
-      border-bottom: 1px solid #ddd;
-      padding-bottom: 0.25rem;
-      cursor: pointer;
-      user-select: none;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
+      font-weight: 600; font-size: 1.1rem; margin-bottom: 1rem; color: #444;
+      border-bottom: 1px solid #ddd; padding-bottom: 0.25rem; cursor: pointer;
+      user-select: none; display: flex; justify-content: space-between; align-items: center;
     }
-    h3 span {
-      font-size: 0.85rem;
-      color: #888;
-      font-weight: 400;
-    }
-    .input-group {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 12px 16px;
-    }
-    label {
-      display: block;
-      font-weight: 500;
-      font-size: 0.85rem;
-      color: #666;
-      margin-bottom: 4px;
-    }
+    h3 span { font-size: 0.85rem; color: #888; font-weight: 400; }
+    .input-group { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px 16px; }
+    label { display: block; font-weight: 500; font-size: 0.85rem; color: #666; margin-bottom: 4px; }
     input[type="number"] {
-      width: 100%;
-      padding: 8px 10px;
-      font-size: 1rem;
-      border: 1.5px solid #ccc;
-      border-radius: 6px;
-      transition: border-color 0.2s ease;
-      background: #fafafa;
-      color: #222;
-      -webkit-appearance: none;
-      -moz-appearance: textfield;
+      width: 100%; padding: 8px 10px; font-size: 1rem; border: 1.5px solid #ccc; border-radius: 6px;
+      transition: border-color 0.2s ease; background: #fafafa; color: #222;
+      -webkit-appearance: none; -moz-appearance: textfield;
     }
-    input[type="number"]:focus {
-      outline: none;
-      border-color: #3b82f6;
-      background: #fff;
-      box-shadow: 0 0 6px #3b82f6aa;
-    }
-    input[type=number]::-webkit-inner-spin-button, 
-    input[type=number]::-webkit-outer-spin-button { 
-      -webkit-appearance: none; 
-      margin: 0; 
-    }
+    input[type="number"]:focus { outline: none; border-color: #3b82f6; background: #fff; box-shadow: 0 0 6px #3b82f6aa; }
+    input[type=number]::-webkit-inner-spin-button, input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
     button {
-      width: 100%;
-      background: #3b82f6;
-      color: #fff;
-      border: none;
-      padding: 14px 0;
-      border-radius: 8px;
-      font-weight: 600;
-      font-size: 1.1rem;
-      cursor: pointer;
-      transition: background-color 0.25s ease;
-      user-select: none;
-      margin-top: 1.2rem;
-      box-shadow: 0 4px 10px #3b82f6bb;
+      width: 100%; background: #3b82f6; color: #fff; border: none; padding: 14px 0; border-radius: 8px;
+      font-weight: 600; font-size: 1.1rem; cursor: pointer; transition: background-color 0.25s ease;
+      user-select: none; margin-top: 1.2rem; box-shadow: 0 4px 10px #3b82f6bb;
     }
-    button:disabled {
-      background: #a5b4fc;
-      cursor: not-allowed;
-      box-shadow: none;
-    }
-    button:not(:disabled):hover {
-      background: #2563eb;
-      box-shadow: 0 6px 15px #2563ebcc;
-    }
+    button:disabled { background: #a5b4fc; cursor: not-allowed; box-shadow: none; }
+    button:not(:disabled):hover { background: #2563eb; box-shadow: 0 6px 15px #2563ebcc; }
     #results {
-      padding: 18px 20px;
-      font-size: 1.1rem;
-      color: #111;
-      background: #f4f6fb;
-      border-radius: 8px;
-      box-shadow: inset 0 0 8px #ddd;
-      min-height: 68px;
-      white-space: pre-wrap;
-      font-family: 'Segoe UI Mono', Consolas, monospace;
-      user-select: text;
-      transition: opacity 0.3s ease;
+      padding: 18px 20px; font-size: 1.1rem; color: #111; background: #f4f6fb; border-radius: 8px;
+      box-shadow: inset 0 0 8px #ddd; min-height: 68px; white-space: pre-wrap;
+      font-family: 'Segoe UI Mono', Consolas, monospace; user-select: text; transition: opacity 0.3s ease;
     }
-    #results b {
-      color: #2563eb;
-    }
-    .collapsed .arrow {
-      transform: rotate(-90deg);
-    }
-    .collapsible-content {
-      overflow: hidden;
-      max-height: 0;
-      transition: max-height 0.3s ease, opacity 0.3s ease;
-      pointer-events: none;
-      opacity: 0;
-      user-select: none;
-    }
-    .collapsible-content.open {
-      max-height: 600px;
-      opacity: 1;
-      pointer-events: auto;
-      user-select: auto;
-    }
-    .arrow {
-      transition: transform 0.3s ease;
-      font-size: 1.1rem;
-      color: #888;
-    }
+    #results b { color: #2563eb; }
+    .collapsed .arrow { transform: rotate(-90deg); }
+    .collapsible-content { overflow: hidden; max-height: 0; transition: max-height 0.3s ease, opacity 0.3s ease; pointer-events: none; opacity: 0; user-select: none; }
+    .collapsible-content.open { max-height: 600px; opacity: 1; pointer-events: auto; user-select: auto; }
+    .arrow { transition: transform 0.3s ease; font-size: 1.1rem; color: #888; }
+    .subtle { font-size: .82rem; color:#6b7280; text-align:center; margin-top:.5rem;}
   </style>
 </head>
 <body>
@@ -201,6 +77,7 @@
     <div id="constContent-J95" class="collapsible-content" role="region" aria-hidden="true">
       <div class="input-group" id="constInputs-J95" role="group" aria-label="Calibration constants input fields for J95"></div>
       <button id="saveBtn-J95" type="button" onclick="saveConstants('J95')">Save Constants</button>
+      <div class="subtle" id="cloudStatus-J95" aria-live="polite"></div>
     </div>
   </section>
 </div>
@@ -218,6 +95,7 @@
     <div id="constContent-J149" class="collapsible-content" role="region" aria-hidden="true">
       <div class="input-group" id="constInputs-J149" role="group" aria-label="Calibration constants input fields for J149"></div>
       <button id="saveBtn-J149" type="button" onclick="saveConstants('J149')">Save Constants</button>
+      <div class="subtle" id="cloudStatus-J149" aria-live="polite"></div>
     </div>
   </section>
 </div>
@@ -226,8 +104,28 @@
   <div id="results" aria-label="Calculation results"></div>
 </section>
 
-<script>
+<!-- Firebase + App (module) -->
+<script type="module">
+  /***** FIREBASE SETUP *****/
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+  import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+
+  // Your provided config
+  const firebaseConfig = {
+    apiKey: "AIzaSyAXwW14wEzGz5IjetGeWCb0tmU_lkDJqJI",
+    authDomain: "mobyam32.firebaseapp.com",
+    projectId: "mobyam32",
+    storageBucket: "mobyam32.appspot.com",
+    messagingSenderId: "453231570263",
+    appId: "1:453231570263:web:1e219d402146960c502212"
+  };
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+
+  /***** ORIGINAL APP LOGIC (kept) *****/
   const NUM_FIELDS = 4;
+  let currentMachine = 'J95';
+  const results = document.getElementById('results');
 
   // Creates inputs for lasers or constants with numeric keypad on mobile
   function createInputs(containerId, prefix, labelPrefix, loadSaved = false, machine = '') {
@@ -254,9 +152,10 @@
     document.getElementById(containerId).innerHTML = html;
   }
 
-  // Save constants to localStorage, keyed by machine
-  function saveConstants(machine) {
+  // Save constants to localStorage AND Firestore, keyed by machine
+  async function saveConstants(machine) {
     let valid = true;
+    const constants = {};
     for(let i=1; i<=NUM_FIELDS; i++) {
       const input = document.getElementById('const' + i + '-' + machine);
       if(input.value.trim() === '' || isNaN(input.value)) {
@@ -265,16 +164,56 @@
       } else {
         input.style.borderColor = '#ccc';
         localStorage.setItem(machine + '_const' + i, input.value);
+        constants['c'+i] = parseFloat(input.value);
       }
     }
-    if(valid) {
-      const saveBtn = document.getElementById('saveBtn-' + machine);
-      saveBtn.textContent = 'Saved ✓';
-      setTimeout(() => saveBtn.textContent = 'Save Constants', 1500);
-      checkCalculateButton(machine);
-    } else {
+    if(!valid) {
       alert('Please fill all constants with valid numbers.');
+      return;
     }
+
+    // Cloud save
+    const statusEl = document.getElementById('cloudStatus-' + machine);
+    try {
+      statusEl.textContent = 'Saving to cloud…';
+      await setDoc(doc(db, "constants", machine), constants, { merge: true });
+      statusEl.textContent = 'Saved to cloud ✓';
+    } catch (e) {
+      statusEl.textContent = 'Cloud save failed (using local values).';
+      console.error(e);
+    }
+
+    const saveBtn = document.getElementById('saveBtn-' + machine);
+    saveBtn.textContent = 'Saved ✓';
+    setTimeout(() => saveBtn.textContent = 'Save Constants', 1500);
+    checkCalculateButton(machine);
+  }
+
+  // Load constants from Firestore → fall back to localStorage
+  async function loadConstants(machine) {
+    const statusEl = document.getElementById('cloudStatus-' + machine);
+    try {
+      statusEl.textContent = 'Loading from cloud…';
+      const snap = await getDoc(doc(db, "constants", machine));
+      if (snap.exists()) {
+        const data = snap.data();
+        for(let i=1;i<=NUM_FIELDS;i++){
+          const val = data['c'+i];
+          if (typeof val === 'number') {
+            localStorage.setItem(machine + '_const' + i, String(val));
+          }
+        }
+        statusEl.textContent = 'Loaded from cloud ✓';
+      } else {
+        statusEl.textContent = 'No cloud values yet (using local if any).';
+      }
+    } catch (e) {
+      statusEl.textContent = 'Cloud load failed (using local if any).';
+      console.error(e);
+    }
+
+    // Refresh constants UI with whatever we have now (cloud or local)
+    createInputs('constInputs-' + machine, 'const', 'Calibration Constant', true, machine);
   }
 
   // Enable/disable calculate button based on input validation
@@ -303,7 +242,7 @@
     }
     results.style.opacity = 0;
     setTimeout(() => {
-      results.innerHTML = output.trim(); // Use innerHTML to render <b> tags
+      results.innerHTML = output.trim();
       results.style.opacity = 1;
     }, 150);
   }
@@ -334,9 +273,7 @@
   function setupTabs() {
     const tabs = document.querySelectorAll('.tab');
     tabs.forEach(tab => {
-      tab.addEventListener('click', () => {
-        activateTab(tab.id);
-      });
+      tab.addEventListener('click', () => { activateTab(tab.id); });
       tab.addEventListener('keydown', e => {
         if(e.key === 'ArrowRight' || e.key === 'ArrowLeft') {
           e.preventDefault();
@@ -358,35 +295,34 @@
       tab.setAttribute('tabindex', isActive ? '0' : '-1');
       const panelId = tab.getAttribute('aria-controls');
       const panel = document.getElementById(panelId);
-      if(panel) {
-        panel.hidden = !isActive;
-      }
+      if(panel) panel.hidden = !isActive;
     });
     currentMachine = tabId.replace('tab-', '');
-    // Reset results when switching machines
     results.textContent = '';
   }
 
-  // Initialize inputs, event listeners, collapsibles, tabs
-  function init() {
+  // Initialize inputs, event listeners, collapsibles, tabs + load from cloud
+  async function init() {
     ['J95', 'J149'].forEach(machine => {
       createInputs('constInputs-' + machine, 'const', 'Calibration Constant', true, machine);
       createInputs('valueInputs-' + machine, 'val', 'Laser', false, machine);
 
       for(let i=1; i<=NUM_FIELDS; i++) {
-        document.getElementById('val' + i + '-' + machine).addEventListener('input', () => checkCalculateButton(machine));
+        document.getElementById('val' + i + '-' + machine)
+          .addEventListener('input', () => checkCalculateButton(machine));
       }
 
       checkCalculateButton(machine);
       setupCollapsible(machine);
+      // Load cloud constants (and refresh the constants UI when done)
+      loadConstants(machine);
     });
 
     setupTabs();
   }
 
-  let currentMachine = 'J95';
-
-  const results = document.getElementById('results');
+  window.calculate = calculate;
+  window.saveConstants = saveConstants;
 
   init();
 </script>
