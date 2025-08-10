@@ -8,6 +8,7 @@
     :root{
       --primary:#F89728; --primary-hover:#d97f1f; --text:#111827; --label:#6B7280;
       --panel:#F3F4F6; --page:#FFFFFF; --ring:rgba(248,151,40,.45); --shadow:rgba(248,151,40,.35);
+      --border:#E5E7EB;
     }
     *,*::before,*::after{ box-sizing:border-box; }
     body{
@@ -26,7 +27,7 @@
     section{ margin-bottom:2rem; }
     h3,.collapsible-toggle{
       font-weight:600; font-size:1.05rem; margin-bottom:1rem; color:var(--text);
-      border-bottom:1px solid #E5E7EB; padding-bottom:.35rem; cursor:pointer;
+      border-bottom:1px solid var(--border); padding-bottom:.35rem; cursor:pointer;
       user-select:none; display:flex; justify-content:space-between; align-items:center;
     }
     .input-group{ display:grid; grid-template-columns:repeat(2,1fr); gap:12px 16px; }
@@ -45,7 +46,7 @@
     button:disabled{ background:#FCD7AE; cursor:not-allowed; box-shadow:none; }
     button:not(:disabled):hover{ background:var(--primary-hover); box-shadow:0 10px 22px var(--shadow); }
     #results{
-      padding:18px 20px; font-size:1.05rem; color:var(--text); background:#fff; border:1px solid #E5E7EB;
+      padding:18px 20px; font-size:1.05rem; color:var(--text); background:#fff; border:1px solid var(--border);
       border-radius:10px; box-shadow:0 6px 14px rgba(0,0,0,.05); min-height:68px; white-space:pre-wrap;
       font-family:'Segoe UI Mono', Consolas, monospace; user-select:text; transition:opacity .25s ease;
     }
@@ -71,7 +72,7 @@
   <section aria-labelledby="lasers-header-J95">
     <h3 id="lasers-header-J95">Enter Laser Values</h3>
     <div class="input-group" id="valueInputs-J95" role="group" aria-label="Laser input fields for J95"></div>
-    <button id="calcBtn-J95" type="button" onclick="calculate('J95')" disabled>Calculate</button>
+    <button id="calcBtn-J95" type="button" disabled>Calculate</button>
   </section>
   <section aria-labelledby="calibration-header-J95">
     <div class="collapsible-toggle collapsed" id="calibration-header-J95" tabindex="0" role="button" aria-expanded="false" aria-controls="constContent-J95">
@@ -79,7 +80,7 @@
     </div>
     <div id="constContent-J95" class="collapsible-content" role="region" aria-hidden="true">
       <div class="input-group" id="constInputs-J95" role="group" aria-label="Calibration constants input fields for J95"></div>
-      <button id="saveBtn-J95" type="button" onclick="saveConstants('J95')">Save Constants</button>
+      <button id="saveBtn-J95" type="button">Save Constants</button>
       <div class="subtle" id="cloudStatus-J95" aria-live="polite"></div>
     </div>
   </section>
@@ -90,7 +91,7 @@
   <section aria-labelledby="lasers-header-J149">
     <h3 id="lasers-header-J149">Enter Laser Values</h3>
     <div class="input-group" id="valueInputs-J149" role="group" aria-label="Laser input fields for J149"></div>
-    <button id="calcBtn-J149" type="button" onclick="calculate('J149')" disabled>Calculate</button>
+    <button id="calcBtn-J149" type="button" disabled>Calculate</button>
   </section>
   <section aria-labelledby="calibration-header-J149">
     <div class="collapsible-toggle collapsed" id="calibration-header-J149" tabindex="0" role="button" aria-expanded="false" aria-controls="constContent-J149">
@@ -98,7 +99,7 @@
     </div>
     <div id="constContent-J149" class="collapsible-content" role="region" aria-hidden="true">
       <div class="input-group" id="constInputs-J149" role="group" aria-label="Calibration constants input fields for J149"></div>
-      <button id="saveBtn-J149" type="button" onclick="saveConstants('J149')">Save Constants</button>
+      <button id="saveBtn-J149" type="button">Save Constants</button>
       <div class="subtle" id="cloudStatus-J149" aria-live="polite"></div>
     </div>
   </section>
@@ -110,9 +111,12 @@
 
 <!-- Firebase + App (module) -->
 <script type="module">
-  /***** FIREBASE SETUP *****/
+  /************ DATA LAYER (Firestore + Local) ************/
   import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-  import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+  import {
+    getFirestore, doc, getDoc, setDoc,
+    enableIndexedDbPersistence
+  } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyAXwW14wEzGz5IjetGeWCb0tmU_lkDJqJI",
@@ -122,159 +126,240 @@
     messagingSenderId: "453231570263",
     appId: "1:453231570263:web:1e219d402146960c502212"
   };
+
   const app = initializeApp(firebaseConfig);
   const db = getFirestore(app);
+  // Offline persistence (best effort)
+  enableIndexedDbPersistence(db).catch(() => { /* ok if not available */ });
 
-  /***** CONFIG / HELPERS *****/
-  const MACHINES = ['J95','J149'];
-  const NUM_FIELDS = 4;
-  const MAX_DIGITS = 6; // -> 9999.99 max
+  /************ CONFIG / STATE ************/
+  const CONFIG = {
+    MACHINES: ['J95','J149'],
+    NUM_FIELDS: 4,
+    MAX_DIGITS: 6 // -> 9999.99 cap
+  };
+
   const monthNames = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
   const $ = (sel, root=document) => root.querySelector(sel);
 
-  const results = $('#results');
-
-  const formatDate = (d) =>
-    `${String(d.getDate()).padStart(2,'0')} ${monthNames[d.getMonth()]} ${d.getFullYear()}`;
-
-  const setStatus = (machine, text) => {
-    const el = $(`#cloudStatus-${machine}`);
-    if (el) el.textContent = text;
+  // App state: constants + transient laser values + lastUpdated
+  const state = {
+    currentMachine: 'J95',
+    machines: {
+      J95: { const: Array(CONFIG.NUM_FIELDS).fill(''), val: Array(CONFIG.NUM_FIELDS).fill(''), lastUpdated: null },
+      J149:{ const: Array(CONFIG.NUM_FIELDS).fill(''), val: Array(CONFIG.NUM_FIELDS).fill(''), lastUpdated: null }
+    }
   };
 
-  // Bank-style formatter with max-digit cap
-  function attachBankFormatter(inputEl, maxDigits = MAX_DIGITS){
-    // prevent exceeding cap on type (not required, but nicer UX)
-    inputEl.addEventListener('beforeinput', (e) => {
-      if (e.inputType === 'insertText' && /\d/.test(e.data)) {
-        const digits = (inputEl.value || '').replace(/\D/g, '');
-        const selection = inputEl.selectionStart !== inputEl.selectionEnd ? 0 : 1; // allow replacing selection
-        if (digits.length + selection > maxDigits) e.preventDefault();
-      }
-    });
-    inputEl.addEventListener('input', () => {
-      let digits = (inputEl.value || '').replace(/\D/g,'');
-      if (!digits) { inputEl.value = ''; return; }
-      if (digits.length > maxDigits) digits = digits.slice(0, maxDigits);
-      inputEl.value = (parseInt(digits,10) / 100).toFixed(2);
-    });
-    inputEl.addEventListener('focus', () => setTimeout(() => inputEl.select(), 0));
+  /************ UTILITIES ************/
+  const formatDate = (d) => `${String(d.getDate()).padStart(2,'0')} ${monthNames[d.getMonth()]} ${d.getFullYear()}`;
+  const setStatus = (machine, text) => { const el = $(`#cloudStatus-${machine}`); if (el) el.textContent = text; };
+  const debounce = (fn, ms=80) => { let t; return (...args)=>{ clearTimeout(t); t=setTimeout(()=>fn(...args), ms); }; };
+
+  // Bank formatter pipeline: digits → cap → /100 → fixed(2)
+  function bankFormat(raw, maxDigits){
+    let digits = String(raw||'').replace(/\D/g,'');
+    if (!digits) return '';
+    if (digits.length > maxDigits) digits = digits.slice(0, maxDigits);
+    return (parseInt(digits,10)/100).toFixed(2);
   }
 
-  function getMachineFromUrl(){
-    const m = (new URLSearchParams(window.location.search).get('m') || '').toUpperCase();
-    return MACHINES.includes(m) ? m : null;
-  }
+  function machineDocRef(machine){ return doc(db, "constants", machine); }
+  function localKey(machine, i){ return `${machine}_const${i+1}`; }
 
-  // Renders inputs and attaches formatter
-  function renderInputs(containerId, prefix, labelPrefix, loadSaved, machine){
-    const container = document.getElementById(containerId);
-    const parts = [];
-    for(let i=1;i<=NUM_FIELDS;i++){
-      const saved = loadSaved && prefix==='const'
-        ? (localStorage.getItem(`${machine}_const${i}`) || '')
-        : '';
-      parts.push(`
-        <div>
-          <label for="${prefix}${i}-${machine}">${labelPrefix} ${i}</label>
-          <input type="text" inputmode="numeric" pattern="[0-9]*"
-                 id="${prefix}${i}-${machine}" placeholder="${labelPrefix} ${i}" value="${saved}" />
-        </div>`);
+  // Local storage sync for constants
+  function pullLocalConstants(machine){
+    const arr = [];
+    for (let i=0;i<CONFIG.NUM_FIELDS;i++){
+      const v = localStorage.getItem(localKey(machine, i));
+      arr.push(v ?? '');
     }
-    container.innerHTML = parts.join('');
-    for(let i=1;i<=NUM_FIELDS;i++){
-      attachBankFormatter(document.getElementById(`${prefix}${i}-${machine}`), MAX_DIGITS);
-    }
+    return arr;
   }
-
-  async function saveConstants(machine){
-    let valid = true;
-    const docRef = doc(db, "constants", machine);
-    const constants = {};
-    for(let i=1;i<=NUM_FIELDS;i++){
-      const el = document.getElementById(`const${i}-${machine}`);
-      const val = parseFloat(el.value);
-      if (isNaN(val)) { valid=false; el.style.borderColor='#ef4444'; }
-      else {
-        el.style.borderColor='#D1D5DB';
-        localStorage.setItem(`${machine}_const${i}`, val.toFixed(2));
-        constants[`c${i}`] = val;
+  function pushLocalConstants(machine, constArr){
+    for (let i=0;i<CONFIG.NUM_FIELDS;i++){
+      const v = constArr[i];
+      if (v !== '' && !isNaN(parseFloat(v))) {
+        localStorage.setItem(localKey(machine, i), parseFloat(v).toFixed(2));
       }
     }
-    if(!valid){ alert('Please fill all constants with valid numbers.'); return; }
-
-    try{
-      setStatus(machine, 'Saving to cloud…');
-      const nowIso = new Date().toISOString();
-      await setDoc(docRef, { ...constants, lastUpdated: nowIso }, { merge:true });
-      setStatus(machine, `Updated ${formatDate(new Date(nowIso))}`);
-    }catch(e){
-      setStatus(machine, 'Cloud save failed (using local values).'); console.error(e);
-    }
-
-    const btn = document.getElementById(`saveBtn-${machine}`);
-    btn.textContent = 'Saved ✓';
-    setTimeout(() => btn.textContent = 'Save Constants', 1500);
-    checkCalculateButton(machine);
   }
 
-  async function loadConstants(machine){
-    const docRef = doc(db, "constants", machine);
+  // Cloud load/save
+  async function loadCloud(machine){
     try{
       setStatus(machine, 'Loading from cloud…');
-      const snap = await getDoc(docRef);
+      const snap = await getDoc(machineDocRef(machine));
       if (snap.exists()){
         const data = snap.data();
-        for(let i=1;i<=NUM_FIELDS;i++){
-          const v = data[`c${i}`];
-          if (typeof v === 'number') localStorage.setItem(`${machine}_const${i}`, v.toFixed(2));
+        const newConsts = state.machines[machine].const.slice();
+        for (let i=0;i<CONFIG.NUM_FIELDS;i++){
+          const v = data[`c${i+1}`];
+          if (typeof v === 'number') newConsts[i] = v.toFixed(2);
         }
-        const stamp = data.lastUpdated ? new Date(data.lastUpdated) : new Date();
-        setStatus(machine, `Updated ${formatDate(stamp)}`);
+        state.machines[machine].const = newConsts;
+        state.machines[machine].lastUpdated = data.lastUpdated ? new Date(data.lastUpdated) : new Date();
+        pushLocalConstants(machine, newConsts);
+        setStatus(machine, `Updated ${formatDate(state.machines[machine].lastUpdated)}`);
       } else {
         setStatus(machine, 'No cloud values yet (using local if any).');
       }
     }catch(e){
-      setStatus(machine, 'Cloud load failed (using local if any).'); console.error(e);
+      setStatus(machine, 'Cloud load failed (using local if any).');
+      console.error(e);
     }
-    // Re-render constants with (possibly) updated local values
-    renderInputs(`constInputs-${machine}`, 'const', 'Calibration Constant', true, machine);
   }
 
-  function checkCalculateButton(machine){
-    let ok = true;
-    for(let i=1;i<=NUM_FIELDS;i++){
-      const v = parseFloat(($(`#val${i}-${machine}`)?.value)||'');
-      if (isNaN(v)) { ok=false; $(`#val${i}-${machine}`).style.borderColor='#ef4444'; }
-      else { $(`#val${i}-${machine}`).style.borderColor='#D1D5DB'; }
+  async function saveCloud(machine){
+    // Only save if all constants are valid numbers
+    const constants = {};
+    for (let i=0;i<CONFIG.NUM_FIELDS;i++){
+      const v = parseFloat(state.machines[machine].const[i]);
+      if (isNaN(v)) { alert('Please fill all constants with valid numbers.'); return false; }
+      constants[`c${i+1}`] = v;
     }
-    $(`#calcBtn-${machine}`).disabled = !ok;
+    try{
+      setStatus(machine, 'Saving to cloud…');
+      const nowIso = new Date().toISOString();
+      await setDoc(machineDocRef(machine), { ...constants, lastUpdated: nowIso }, { merge:true });
+      state.machines[machine].lastUpdated = new Date(nowIso);
+      setStatus(machine, `Updated ${formatDate(state.machines[machine].lastUpdated)}`);
+      return true;
+    }catch(e){
+      setStatus(machine, 'Cloud save failed (using local values).');
+      console.error(e);
+      return false;
+    }
+  }
+
+  /************ UI (Render + Events) ************/
+  function renderInputs(machine){
+    // constants
+    const constWrap = $(`#constInputs-${machine}`);
+    const constParts = [];
+    for (let i=0;i<CONFIG.NUM_FIELDS;i++){
+      constParts.push(`
+        <div>
+          <label for="const${i+1}-${machine}">Calibration Constant ${i+1}</label>
+          <input type="text" inputmode="numeric" pattern="[0-9]*"
+                 id="const${i+1}-${machine}" value="${state.machines[machine].const[i]||''}" placeholder="Calibration Constant ${i+1}" />
+        </div>`);
+    }
+    constWrap.innerHTML = constParts.join('');
+
+    // lasers
+    const valWrap = $(`#valueInputs-${machine}`);
+    const valParts = [];
+    for (let i=0;i<CONFIG.NUM_FIELDS;i++){
+      valParts.push(`
+        <div>
+          <label for="val${i+1}-${machine}">Laser ${i+1}</label>
+          <input type="text" inputmode="numeric" pattern="[0-9]*"
+                 id="val${i+1}-${machine}" value="${state.machines[machine].val[i]||''}" placeholder="Laser ${i+1}" />
+        </div>`);
+    }
+    valWrap.innerHTML = valParts.join('');
+
+    // buttons
+    const calcBtn = $(`#calcBtn-${machine}`);
+    calcBtn.disabled = !allLasersValid(machine);
+  }
+
+  // Event delegation for inputs (constants + lasers)
+  function attachInputHandlers(machine){
+    const constWrap = $(`#constInputs-${machine}`);
+    const valWrap  = $(`#valueInputs-${machine}`);
+    const debouncedCheck = debounce(()=> updateCalcButton(machine), 80);
+
+    const beforeInputGuard = (e)=>{
+      // prevent exceeding MAX_DIGITS for numeric insert
+      if (e.inputType === 'insertText' && /\d/.test(e.data)) {
+        const current = e.target.value || '';
+        const digits = current.replace(/\D/g,'');
+        const selection = e.target.selectionStart !== e.target.selectionEnd ? 0 : 1;
+        if (digits.length + selection > CONFIG.MAX_DIGITS) e.preventDefault();
+      }
+    };
+
+    const onConstInput = (e)=>{
+      if (!e.target.id.startsWith('const')) return;
+      const idx = parseInt(e.target.id.match(/^const(\d+)-/)[1],10)-1;
+      const formatted = bankFormat(e.target.value, CONFIG.MAX_DIGITS);
+      e.target.value = formatted;
+      state.machines[machine].const[idx] = formatted;
+    };
+
+    const onValInput = (e)=>{
+      if (!e.target.id.startsWith('val')) return;
+      const idx = parseInt(e.target.id.match(/^val(\d+)-/)[1],10)-1;
+      const formatted = bankFormat(e.target.value, CONFIG.MAX_DIGITS);
+      e.target.value = formatted;
+      state.machines[machine].val[idx] = formatted;
+      debouncedCheck();
+    };
+
+    const onFocusSelectAll = (e)=>{
+      if (e.target.tagName === 'INPUT') setTimeout(()=> e.target.select(),0);
+    };
+
+    constWrap.addEventListener('beforeinput', beforeInputGuard);
+    valWrap .addEventListener('beforeinput', beforeInputGuard);
+    constWrap.addEventListener('input', onConstInput);
+    valWrap .addEventListener('input', onValInput);
+    constWrap.addEventListener('focus', onFocusSelectAll, true);
+    valWrap .addEventListener('focus', onFocusSelectAll, true);
+  }
+
+  function allLasersValid(machine){
+    for (let i=0;i<CONFIG.NUM_FIELDS;i++){
+      if (isNaN(parseFloat(state.machines[machine].val[i]))) return false;
+    }
+    return true;
+  }
+  function updateCalcButton(machine){
+    const ok = allLasersValid(machine);
+    const btn = $(`#calcBtn-${machine}`);
+    btn.disabled = !ok;
+    // optional red border on invalid
+    for (let i=0;i<CONFIG.NUM_FIELDS;i++){
+      const el = $(`#val${i+1}-${machine}`);
+      if (!el) continue;
+      const v = parseFloat(el.value);
+      el.style.borderColor = isNaN(v) ? '#ef4444' : '#D1D5DB';
+    }
   }
 
   function calculate(machine){
     let out = '';
-    for(let i=1;i<=NUM_FIELDS;i++){
-      const c = parseFloat(localStorage.getItem(`${machine}_const${i}`) || '0');
-      const v = parseFloat(($(`#val${i}-${machine}`)?.value) || '0');
-      out += `${machine} Laser ${i}: <b>${(v - c).toFixed(2)}</b><br>\n`;
+    for (let i=0;i<CONFIG.NUM_FIELDS;i++){
+      const c = parseFloat(state.machines[machine].const[i] || '0');
+      const v = parseFloat(state.machines[machine].val[i]   || '0');
+      out += `${machine} Laser ${i+1}: <b>${(v - c).toFixed(2)}</b><br>\n`;
     }
-    results.style.opacity=0;
-    setTimeout(()=>{ results.innerHTML = out.trim(); results.style.opacity=1; }, 150);
+    const results = $('#results');
+    results.style.opacity = 0;
+    setTimeout(()=>{ results.innerHTML = out.trim(); results.style.opacity = 1; }, 120);
+  }
+
+  function setupCalcButtons(machine){
+    $(`#calcBtn-${machine}`).addEventListener('click', ()=> calculate(machine));
   }
 
   function setupCollapsible(machine){
-    const header = document.getElementById(`calibration-header-${machine}`);
-    const panel  = document.getElementById(`constContent-${machine}`);
+    const header = $(`#calibration-header-${machine}`);
+    const panel  = $(`#constContent-${machine}`);
     const arrow  = header.querySelector('.arrow');
-    const toggle = () => {
-      const expanded = header.getAttribute('aria-expanded') === 'true';
+    const toggle = ()=>{
+      const expanded = header.getAttribute('aria-expanded')==='true';
       header.setAttribute('aria-expanded', String(!expanded));
       panel.classList.toggle('open');
       header.classList.toggle('collapsed');
       arrow.textContent = expanded ? '▶' : '▼';
     };
     header.addEventListener('click', toggle);
-    header.addEventListener('keydown', e => { if(['Enter',' '].includes(e.key)){ e.preventDefault(); toggle(); } });
+    header.addEventListener('keydown', e=>{
+      if (e.key==='Enter' || e.key===' ') { e.preventDefault(); toggle(); }
+    });
   }
 
   function setupTabs(){
@@ -282,7 +367,7 @@
     tabs.forEach(tab=>{
       tab.addEventListener('click', ()=> activateTab(tab.id));
       tab.addEventListener('keydown', e=>{
-        if(e.key==='ArrowRight' || e.key==='ArrowLeft'){
+        if (e.key==='ArrowRight' || e.key==='ArrowLeft'){
           e.preventDefault();
           const arr=[...tabs]; let idx = arr.indexOf(document.activeElement);
           idx = (e.key==='ArrowRight') ? (idx+1)%arr.length : (idx-1+arr.length)%arr.length;
@@ -294,38 +379,61 @@
 
   function activateTab(tabId){
     document.querySelectorAll('.tab').forEach(tab=>{
-      const isActive = (tab.id === tabId);
-      tab.classList.toggle('active', isActive);
-      tab.setAttribute('aria-selected', isActive);
-      tab.setAttribute('tabindex', isActive ? '0' : '-1');
+      const active = (tab.id === tabId);
+      tab.classList.toggle('active', active);
+      tab.setAttribute('aria-selected', active);
+      tab.setAttribute('tabindex', active ? '0' : '-1');
       const panel = document.getElementById(tab.getAttribute('aria-controls'));
-      if(panel) panel.hidden = !isActive;
+      if (panel) panel.hidden = !active;
     });
-    results.textContent='';
+    const m = tabId.replace('tab-','');
+    state.currentMachine = m;
+    // keep URL in sync for bookmarking/QR
+    const url = new URL(window.location.href);
+    url.searchParams.set('m', m);
+    history.replaceState({}, '', url.toString());
+    // Clear results on tab switch
+    $('#results').textContent = '';
   }
 
-  async function init(){
-    MACHINES.forEach(machine=>{
-      renderInputs(`constInputs-${machine}`, 'const', 'Calibration Constant', true, machine);
-      renderInputs(`valueInputs-${machine}`, 'val', 'Laser', false, machine);
-      for(let i=1;i<=NUM_FIELDS;i++){
-        $(`#val${i}-${machine}`).addEventListener('input', () => checkCalculateButton(machine));
-      }
-      checkCalculateButton(machine);
-      setupCollapsible(machine);
-      loadConstants(machine);
+  function setupSaveButtons(machine){
+    $(`#saveBtn-${machine}`).addEventListener('click', async ()=>{
+      // persist to local first, then cloud
+      pushLocalConstants(machine, state.machines[machine].const);
+      const ok = await saveCloud(machine);
+      const btn = $(`#saveBtn-${machine}`);
+      btn.textContent = ok ? 'Saved ✓' : 'Save Constants';
+      if (ok) setTimeout(()=> btn.textContent='Save Constants', 1500);
     });
+  }
 
+  function getMachineFromUrl(){
+    const m = (new URLSearchParams(window.location.search).get('m') || '').toUpperCase();
+    return CONFIG.MACHINES.includes(m) ? m : null;
+  }
+
+  /************ INIT ************/
+  async function init(){
+    // Seed state from local storage first (fast UI), then render and attach handlers
+    for (const machine of CONFIG.MACHINES){
+      state.machines[machine].const = pullLocalConstants(machine);
+      renderInputs(machine);
+      attachInputHandlers(machine);
+      setupCalcButtons(machine);
+      setupCollapsible(machine);
+      setupSaveButtons(machine);
+      // Load from cloud to refresh constants + status
+      loadCloud(machine).then(()=> {
+        // Re-render constants to show cloud values after they arrive
+        renderInputs(machine);
+      });
+    }
     setupTabs();
 
-    // Deep-link via ?m=
-    const m = getMachineFromUrl() || 'J95';
-    activateTab(`tab-${m}`);
+    // Deep link to machine via ?m=
+    const urlMachine = getMachineFromUrl() || 'J95';
+    activateTab('tab-' + urlMachine);
   }
-
-  // expose for onclick
-  window.calculate = calculate;
-  window.saveConstants = saveConstants;
 
   init();
 </script>
