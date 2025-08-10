@@ -56,6 +56,17 @@
     .collapsible-content.open{ max-height:600px; opacity:1; pointer-events:auto; user-select:auto; }
     .arrow{ transition:transform .3s ease; font-size:1.1rem; color:var(--label); }
     .subtle{ font-size:.82rem; color:var(--label); text-align:center; margin-top:.5rem; }
+
+    /* tiny pill .00 button row (right aligned) */
+    .row-right{ display:flex; justify-content:flex-end; align-items:center; margin-top:6px; margin-bottom:6px; }
+    .tiny-chip{
+      font: inherit; font-weight:700; padding:6px 10px; line-height:1; border-radius:999px;
+      background:#fff; color:var(--primary); border:2px solid var(--primary);
+      cursor:pointer; user-select:none; transition:background .15s ease, color .15s ease, box-shadow .2s ease, transform .06s ease;
+      box-shadow:0 2px 6px rgba(0,0,0,.05);
+    }
+    .tiny-chip:hover{ background:#FFF7EE; }
+    .tiny-chip:active{ transform: translateY(1px); }
   </style>
 </head>
 <body>
@@ -72,6 +83,12 @@
   <section aria-labelledby="lasers-header-J95">
     <h3 id="lasers-header-J95">Enter Laser Values</h3>
     <div class="input-group" id="valueInputs-J95" role="group" aria-label="Laser input fields for J95"></div>
+
+    <!-- .00 pill above Calculate -->
+    <div class="row-right">
+      <button type="button" class="tiny-chip" id="chip00-J95" aria-label="Append double zero to current laser field">.00</button>
+    </div>
+
     <button id="calcBtn-J95" type="button" disabled>Calculate</button>
   </section>
   <section aria-labelledby="calibration-header-J95">
@@ -91,6 +108,12 @@
   <section aria-labelledby="lasers-header-J149">
     <h3 id="lasers-header-J149">Enter Laser Values</h3>
     <div class="input-group" id="valueInputs-J149" role="group" aria-label="Laser input fields for J149"></div>
+
+    <!-- .00 pill above Calculate -->
+    <div class="row-right">
+      <button type="button" class="tiny-chip" id="chip00-J149" aria-label="Append double zero to current laser field">.00</button>
+    </div>
+
     <button id="calcBtn-J149" type="button" disabled>Calculate</button>
   </section>
   <section aria-labelledby="calibration-header-J149">
@@ -130,7 +153,7 @@
   const app = initializeApp(firebaseConfig);
   const db = getFirestore(app);
   // Offline persistence (best effort)
-  enableIndexedDbPersistence(db).catch(() => { /* ok if not available */ });
+  enableIndexedDbPersistence(db).catch(() => { /* fine if not available */ });
 
   /************ CONFIG / STATE ************/
   const CONFIG = {
@@ -141,13 +164,14 @@
 
   const monthNames = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
   const $ = (sel, root=document) => root.querySelector(sel);
+  const results = $('#results');
 
   // App state: constants + transient laser values + lastUpdated
   const state = {
     currentMachine: 'J95',
     machines: {
-      J95: { const: Array(CONFIG.NUM_FIELDS).fill(''), val: Array(CONFIG.NUM_FIELDS).fill(''), lastUpdated: null },
-      J149:{ const: Array(CONFIG.NUM_FIELDS).fill(''), val: Array(CONFIG.NUM_FIELDS).fill(''), lastUpdated: null }
+      J95:  { const: Array(CONFIG.NUM_FIELDS).fill(''), val: Array(CONFIG.NUM_FIELDS).fill(''), lastUpdated: null },
+      J149: { const: Array(CONFIG.NUM_FIELDS).fill(''), val: Array(CONFIG.NUM_FIELDS).fill(''), lastUpdated: null }
     }
   };
 
@@ -336,9 +360,8 @@
       const v = parseFloat(state.machines[machine].val[i]   || '0');
       out += `${machine} Laser ${i+1}: <b>${(v - c).toFixed(2)}</b><br>\n`;
     }
-    const results = $('#results');
-    results.style.opacity = 0;
-    setTimeout(()=>{ results.innerHTML = out.trim(); results.style.opacity = 1; }, 120);
+    results.style.opacity=0;
+    setTimeout(()=>{ results.innerHTML = out.trim(); results.style.opacity=1; }, 120);
   }
 
   function setupCalcButtons(machine){
@@ -388,17 +411,44 @@
     });
     const m = tabId.replace('tab-','');
     state.currentMachine = m;
-    // keep URL in sync for bookmarking/QR
+    // sync URL for bookmarking/QR
     const url = new URL(window.location.href);
     url.searchParams.set('m', m);
     history.replaceState({}, '', url.toString());
     // Clear results on tab switch
-    $('#results').textContent = '';
+    results.textContent = '';
+  }
+
+  // .00 pill: append two zeros to current laser (or Laser 1) for that machine
+  function appendDoubleZero(machine){
+    let target = document.activeElement;
+    const panel = document.getElementById(`machine-${machine}`);
+    const onLaserHere = target && panel.contains(target) && /^val\d+-/.test(target.id);
+    if (!onLaserHere) target = document.getElementById(`val1-${machine}`);
+    if (!target) return;
+
+    let digits = String(target.value||'').replace(/\D/g,'');
+    digits = (digits + '00').slice(0, CONFIG.MAX_DIGITS); // respect cap
+    const formatted = bankFormat(digits, CONFIG.MAX_DIGITS);
+
+    target.value = formatted;
+    const idx = parseInt(target.id.match(/^val(\d+)-/)[1],10) - 1;
+    state.machines[machine].val[idx] = formatted;
+    updateCalcButton(machine);
+  }
+
+  function setupChipButtons(){
+    document.getElementById('chip00-J95') .addEventListener('click', ()=> appendDoubleZero('J95'));
+    document.getElementById('chip00-J149').addEventListener('click', ()=> appendDoubleZero('J149'));
+  }
+
+  function getMachineFromUrl(){
+    const m = (new URLSearchParams(window.location.search).get('m') || '').toUpperCase();
+    return CONFIG.MACHINES.includes(m) ? m : null;
   }
 
   function setupSaveButtons(machine){
     $(`#saveBtn-${machine}`).addEventListener('click', async ()=>{
-      // persist to local first, then cloud
       pushLocalConstants(machine, state.machines[machine].const);
       const ok = await saveCloud(machine);
       const btn = $(`#saveBtn-${machine}`);
@@ -407,14 +457,9 @@
     });
   }
 
-  function getMachineFromUrl(){
-    const m = (new URLSearchParams(window.location.search).get('m') || '').toUpperCase();
-    return CONFIG.MACHINES.includes(m) ? m : null;
-  }
-
   /************ INIT ************/
   async function init(){
-    // Seed state from local storage first (fast UI), then render and attach handlers
+    // Seed state from local first (fast UI), render, attach handlers, then cloud refresh
     for (const machine of CONFIG.MACHINES){
       state.machines[machine].const = pullLocalConstants(machine);
       renderInputs(machine);
@@ -422,13 +467,10 @@
       setupCalcButtons(machine);
       setupCollapsible(machine);
       setupSaveButtons(machine);
-      // Load from cloud to refresh constants + status
-      loadCloud(machine).then(()=> {
-        // Re-render constants to show cloud values after they arrive
-        renderInputs(machine);
-      });
+      loadCloud(machine).then(()=> renderInputs(machine)); // refresh with cloud values when ready
     }
     setupTabs();
+    setupChipButtons();
 
     // Deep link to machine via ?m=
     const urlMachine = getMachineFromUrl() || 'J95';
