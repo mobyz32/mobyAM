@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <title>AM Machine Calculator</title>
   <style>
     :root{
@@ -10,63 +10,34 @@
       --panel:#F3F4F6; --page:#FFFFFF; --ring:rgba(248,151,40,.45); --shadow:rgba(248,151,40,.35);
       --border:#E5E7EB;
     }
-    *,*::before,*::after{ box-sizing:border-box; }
-    body{
-      font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      max-width:420px; margin:48px auto; padding:24px 16px 32px;
-      background:var(--page); color:var(--text); line-height:1.4; user-select:none;
-    }
-    h2{ font-weight:700; font-size:1.8rem; text-align:center; margin-bottom:1.5rem; color:var(--text); }
-    .tabs{ display:flex; justify-content:center; margin-bottom:2rem; gap:16px; user-select:none; }
-    .tab{
-      padding:10px 20px; font-weight:600; font-size:1.05rem; border-radius:24px; border:2px solid transparent; cursor:pointer;
-      color:var(--label); transition:all .25s ease; background:#fff; min-width:80px; text-align:center; box-shadow:0 2px 6px rgba(0,0,0,.06);
-    }
-    .tab:hover{ color:var(--primary); border-color:var(--primary); }
-    .tab.active{ color:#fff; background:var(--primary); border-color:var(--primary); box-shadow:0 6px 14px var(--shadow); cursor:default; }
-    section{ margin-bottom:2rem; }
-    h3,.collapsible-toggle{
-      font-weight:600; font-size:1.05rem; margin-bottom:1rem; color:var(--text);
-      border-bottom:1px solid var(--border); padding-bottom:.35rem; cursor:pointer;
-      user-select:none; display:flex; justify-content:space-between; align-items:center;
-    }
-    .input-group{ display:grid; grid-template-columns:repeat(2,1fr); gap:12px 16px; }
-    label{ display:block; font-weight:600; font-size:.85rem; color:var(--label); margin-bottom:4px; }
-    input[type="text"]{
-      width:100%; padding:10px 12px; font-size:1rem; border:1.5px solid #D1D5DB; border-radius:8px;
-      transition:border-color .2s ease, box-shadow .2s ease, background .2s ease; background:var(--panel); color:var(--text);
-    }
-    input[type="text"]:focus{ outline:none; border-color:var(--primary); background:#fff; box-shadow:0 0 0 4px var(--ring); }
-    button{
-      width:100%; background:var(--primary); color:#fff; border:none; padding:14px 0; border-radius:10px;
-      font-weight:700; font-size:1.05rem; cursor:pointer; transition:transform .06s ease, background .2s ease, box-shadow .2s ease;
-      user-select:none; margin-top:1.2rem; box-shadow:0 8px 18px var(--shadow);
-    }
-    button:active{ transform:translateY(1px); }
-    button:disabled{ background:#FCD7AE; cursor:not-allowed; box-shadow:none; }
-    button:not(:disabled):hover{ background:var(--primary-hover); box-shadow:0 10px 22px var(--shadow); }
-    #results{
-      padding:18px 20px; font-size:1.05rem; color:var(--text); background:#fff; border:1px solid var(--border);
-      border-radius:10px; box-shadow:0 6px 14px rgba(0,0,0,.05); min-height:68px; white-space:pre-wrap;
-      font-family:'Segoe UI Mono', Consolas, monospace; user-select:text; transition:opacity .25s ease;
-    }
-    #results b{ color:var(--primary-hover); }
-    .collapsed .arrow{ transform:rotate(-90deg); }
-    .collapsible-content{ overflow:hidden; max-height:0; transition:max-height .3s ease, opacity .3s ease; pointer-events:none; opacity:0; user-select:none; }
-    .collapsible-content.open{ max-height:600px; opacity:1; pointer-events:auto; user-select:auto; }
-    .arrow{ transition:transform .3s ease; font-size:1.1rem; color:var(--label); }
-    .subtle{ font-size:.82rem; color:var(--label); text-align:center; margin-top:.5rem; }
-
-    /* tiny pill .00 button row (right aligned) */
-    .row-right{ display:flex; justify-content:flex-end; align-items:center; margin-top:6px; margin-bottom:6px; }
-    .tiny-chip{
-      font: inherit; font-weight:700; padding:6px 10px; line-height:1; border-radius:999px;
-      background:#fff; color:var(--primary); border:2px solid var(--primary);
-      cursor:pointer; user-select:none; transition:background .15s ease, color .15s ease, box-shadow .2s ease, transform .06s ease;
-      box-shadow:0 2px 6px rgba(0,0,0,.05);
-    }
-    .tiny-chip:hover{ background:#FFF7EE; }
-    .tiny-chip:active{ transform: translateY(1px); }
+    *,*::before,*::after{box-sizing:border-box}
+    body{font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;max-width:420px;margin:48px auto;padding:24px 16px 32px;background:var(--page);color:var(--text);line-height:1.4;user-select:none}
+    h2{font-weight:700;font-size:1.8rem;text-align:center;margin-bottom:1.5rem;color:var(--text)}
+    .tabs{display:flex;justify-content:center;margin-bottom:2rem;gap:16px;user-select:none}
+    .tab{padding:10px 20px;font-weight:600;font-size:1.05rem;border-radius:24px;border:2px solid transparent;cursor:pointer;color:var(--label);transition:all .25s ease;background:#fff;min-width:80px;text-align:center;box-shadow:0 2px 6px rgba(0,0,0,.06)}
+    .tab:hover{color:var(--primary);border-color:var(--primary)}
+    .tab.active{color:#fff;background:var(--primary);border-color:var(--primary);box-shadow:0 6px 14px var(--shadow);cursor:default}
+    section{margin-bottom:2rem}
+    h3,.collapsible-toggle{font-weight:600;font-size:1.05rem;margin-bottom:1rem;color:var(--text);border-bottom:1px solid var(--border);padding-bottom:.35rem;cursor:pointer;user-select:none;display:flex;justify-content:space-between;align-items:center}
+    .input-group{display:grid;grid-template-columns:repeat(2,1fr);gap:12px 16px}
+    label{display:block;font-weight:600;font-size:.85rem;color:var(--label);margin-bottom:4px}
+    input[type="text"]{width:100%;padding:10px 12px;font-size:1rem;border:1.5px solid #D1D5DB;border-radius:8px;transition:border-color .2s ease,box-shadow .2s ease,background .2s ease;background:var(--panel);color:var(--text)}
+    input[type="text"]:focus{outline:none;border-color:var(--primary);background:#fff;box-shadow:0 0 0 4px var(--ring)}
+    button{width:100%;background:var(--primary);color:#fff;border:none;padding:14px 0;border-radius:10px;font-weight:700;font-size:1.05rem;cursor:pointer;transition:transform .06s ease,background .2s ease,box-shadow .2s ease;user-select:none;margin-top:1.2rem;box-shadow:0 8px 18px var(--shadow)}
+    button:active{transform:translateY(1px)}
+    button:disabled{background:#FCD7AE;cursor:not-allowed;box-shadow:none}
+    button:not(:disabled):hover{background:var(--primary-hover);box-shadow:0 10px 22px var(--shadow)}
+    #results{padding:18px 20px;font-size:1.05rem;color:var(--text);background:#fff;border:1px solid var(--border);border-radius:10px;box-shadow:0 6px 14px rgba(0,0,0,.05);min-height:68px;white-space:pre-wrap;font-family:'Segoe UI Mono',Consolas,monospace;user-select:text;transition:opacity .25s ease}
+    #results b{color:var(--primary-hover)}
+    .collapsed .arrow{transform:rotate(-90deg)}
+    .collapsible-content{overflow:hidden;max-height:0;transition:max-height .3s ease,opacity .3s ease;pointer-events:none;opacity:0;user-select:none}
+    .collapsible-content.open{max-height:600px;opacity:1;pointer-events:auto;user-select:auto}
+    .arrow{transition:transform .3s ease;font-size:1.1rem;color:var(--label)}
+    .subtle{font-size:.82rem;color:var(--label);text-align:center;margin-top:.5rem}
+    .row-right{display:flex;justify-content:flex-end;align-items:center;margin-top:6px;margin-bottom:6px}
+    .tiny-chip{font:inherit;font-weight:700;padding:6px 10px;line-height:1;border-radius:999px;background:#fff;color:var(--primary);border:2px solid var(--primary);cursor:pointer;user-select:none;transition:background .15s ease,color .15s ease,box-shadow .2s ease,transform .06s ease;box-shadow:0 2px 6px rgba(0,0,0,.05)}
+    .tiny-chip:hover{background:#FFF7EE}
+    .tiny-chip:active{transform:translateY(1px)}
   </style>
 </head>
 <body>
@@ -74,70 +45,21 @@
 <h2>AM Machine Calculator</h2>
 
 <div class="tabs" role="tablist" aria-label="Select machine">
-  <div class="tab active" role="tab" tabindex="0" aria-selected="true" aria-controls="machine-J95" id="tab-J95">J95</div>
-  <div class="tab" role="tab" tabindex="-1" aria-selected="false" aria-controls="machine-J149" id="tab-J149">J149</div>
+  <div class="tab active" role="tab" tabindex="0" aria-selected="true" aria-controls="panel-J95"  id="tab-J95">J95</div>
+  <div class="tab"         role="tab" tabindex="-1" aria-selected="false" aria-controls="panel-J149" id="tab-J149">J149</div>
 </div>
 
-<!-- J95 -->
-<div id="machine-J95" role="tabpanel" aria-labelledby="tab-J95">
-  <section aria-labelledby="lasers-header-J95">
-    <h3 id="lasers-header-J95">Enter Laser Values</h3>
-    <div class="input-group" id="valueInputs-J95" role="group" aria-label="Laser input fields for J95"></div>
-
-    <div class="row-right">
-      <button type="button" class="tiny-chip" id="chip00-J95" aria-label="Append double zero to current laser field">.00</button>
-    </div>
-
-    <button id="calcBtn-J95" type="button" disabled>Calculate</button>
-  </section>
-  <section aria-labelledby="calibration-header-J95">
-    <div class="collapsible-toggle collapsed" id="calibration-header-J95" tabindex="0" role="button" aria-expanded="false" aria-controls="constContent-J95">
-      Calibration Constants <span class="arrow">▶</span>
-    </div>
-    <div id="constContent-J95" class="collapsible-content" role="region" aria-hidden="true">
-      <div class="input-group" id="constInputs-J95" role="group" aria-label="Calibration constants input fields for J95"></div>
-      <button id="saveBtn-J95" type="button">Save Constants</button>
-      <div class="subtle" id="cloudStatus-J95" aria-live="polite"></div>
-    </div>
-  </section>
-</div>
-
-<!-- J149 -->
-<div id="machine-J149" role="tabpanel" aria-labelledby="tab-J149" hidden>
-  <section aria-labelledby="lasers-header-J149">
-    <h3 id="lasers-header-J149">Enter Laser Values</h3>
-    <div class="input-group" id="valueInputs-J149" role="group" aria-label="Laser input fields for J149"></div>
-
-    <div class="row-right">
-      <button type="button" class="tiny-chip" id="chip00-J149" aria-label="Append double zero to current laser field">.00</button>
-    </div>
-
-    <button id="calcBtn-J149" type="button" disabled>Calculate</button>
-  </section>
-  <section aria-labelledby="calibration-header-J149">
-    <div class="collapsible-toggle collapsed" id="calibration-header-J149" tabindex="0" role="button" aria-expanded="false" aria-controls="constContent-J149">
-      Calibration Constants <span class="arrow">▶</span>
-    </div>
-    <div id="constContent-J149" class="collapsible-content" role="region" aria-hidden="true">
-      <div class="input-group" id="constInputs-J149" role="group" aria-label="Calibration constants input fields for J149"></div>
-      <button id="saveBtn-J149" type="button">Save Constants</button>
-      <div class="subtle" id="cloudStatus-J149" aria-live="polite"></div>
-    </div>
-  </section>
-</div>
+<!-- Panels will be rendered here -->
+<div id="app"></div>
 
 <section aria-live="polite" aria-atomic="true" aria-relevant="additions">
   <div id="results" aria-label="Calculation results"></div>
 </section>
 
-<!-- Firebase + App (module) -->
 <script type="module">
-  /************ DATA LAYER (Firestore + Local) ************/
+  /******** Firebase ********/
   import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-  import {
-    getFirestore, doc, getDoc, setDoc,
-    enableIndexedDbPersistence
-  } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+  import { getFirestore, doc, getDoc, setDoc, enableIndexedDbPersistence } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyAXwW14wEzGz5IjetGeWCb0tmU_lkDJqJI",
@@ -148,381 +70,316 @@
     appId: "1:453231570263:web:1e219d402146960c502212"
   };
 
-  const app = initializeApp(firebaseConfig);
-  const db = getFirestore(app);
-  // Offline persistence (best effort)
-  enableIndexedDbPersistence(db).catch(() => { /* ok if not available */ });
+  const appFB = initializeApp(firebaseConfig);
+  const db = getFirestore(appFB);
+  enableIndexedDbPersistence(db).catch(()=>{});
 
-  /************ CONFIG / STATE ************/
-  const CONFIG = {
-    MACHINES: ['J95','J149'],
-    NUM_FIELDS: 4,
-    MAX_DIGITS: 6 // -> 9999.99 cap
-  };
+  /******** Config & State ********/
+  const MACHINES = ["J95","J149"];
+  const FIELDS = 4;
+  const MAX_DIGITS = 6;
+  const month = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
 
-  const monthNames = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
-  const $ = (sel, root=document) => root.querySelector(sel);
-  const results = $('#results');
+  const $  = (s, r=document)=>r.querySelector(s);
+  const $$ = (s, r=document)=>Array.from(r.querySelectorAll(s));
+  const results = $("#results");
 
-  // App state: constants + sticky laser values + lastUpdated
   const state = {
-    currentMachine: 'J95',
-    machines: {
-      J95:  { const: Array(CONFIG.NUM_FIELDS).fill(''), val: Array(CONFIG.NUM_FIELDS).fill(''), lastUpdated: null },
-      J149: { const: Array(CONFIG.NUM_FIELDS).fill(''), val: Array(CONFIG.NUM_FIELDS).fill(''), lastUpdated: null }
-    }
+    current: "J95",
+    data: Object.fromEntries(MACHINES.map(m=>[m,{const:Array(FIELDS).fill(""), val:Array(FIELDS).fill(""), lastUpdated:null}]))
+  };
+  let activeInput = null; // last-focused input
+
+  /******** Utils ********/
+  const fmtDate = d => `${String(d.getDate()).padStart(2,"0")} ${month[d.getMonth()]} ${d.getFullYear()}`;
+  const ringOk  = el => el && (el.style.borderColor = "#D1D5DB");
+  const ringBad = el => el && (el.style.borderColor = "#ef4444");
+  const setStatus = (m, t)=> { const el = $(`#cloudStatus-${m}`); if (el) el.textContent = t; };
+  const bankFormat = (raw)=>{
+    let digits = String(raw||"").replace(/\D/g,"");
+    if (!digits) return "";
+    if (digits.length > MAX_DIGITS) digits = digits.slice(0, MAX_DIGITS);
+    return (parseInt(digits,10)/100).toFixed(2);
+  };
+  const docRef = m => doc(db, "constants", m);
+  const lkey   = (m,i)=>`${m}_const${i+1}`;
+
+  // fast local mirror for constants only
+  const pullLocalConst = m => Array.from({length:FIELDS},(_,i)=>localStorage.getItem(lkey(m,i)) ?? "");
+  const pushLocalConst = (m, arr)=> arr.forEach((v,i)=>{ if(v!=="" && !isNaN(parseFloat(v))) localStorage.setItem(lkey(m,i), parseFloat(v).toFixed(2)); });
+
+  const qsMachine = ()=> {
+    const p = new URLSearchParams(location.search).get("m");
+    return MACHINES.includes((p||"").toUpperCase()) ? p.toUpperCase() : null;
   };
 
-  // Track currently focused input (any input). Used by .00 pill.
-  let activeInput = null;
-
-  /************ UTILITIES ************/
-  const formatDate = (d) => `${String(d.getDate()).padStart(2,'0')} ${monthNames[d.getMonth()]} ${d.getFullYear()}`;
-  const setStatus = (machine, text) => { const el = $(`#cloudStatus-${machine}`); if (el) el.textContent = text; };
-  const debounce = (fn, ms=80) => { let t; return (...args)=>{ clearTimeout(t); t=setTimeout(()=>fn(...args), ms); }; };
-
-  // Bank formatter: digits → cap → /100 → fixed(2)
-  function bankFormat(raw, maxDigits){
-    let digits = String(raw||'').replace(/\D/g,'');
-    if (!digits) return '';
-    if (digits.length > maxDigits) digits = digits.slice(0, maxDigits);
-    return (parseInt(digits,10)/100).toFixed(2);
-  }
-
-  function machineDocRef(machine){ return doc(db, "constants", machine); }
-  function localKeyConst(machine, i){ return `${machine}_const${i+1}`; }
-  function localKeyVal(machine, i){ return `${machine}_val${i+1}`; }  // sticky lasers
-
-  // Local storage sync for constants
-  function pullLocalConstants(machine){
-    const arr = [];
-    for (let i=0;i<CONFIG.NUM_FIELDS;i++){
-      const v = localStorage.getItem(localKeyConst(machine, i));
-      arr.push(v ?? '');
-    }
-    return arr;
-  }
-  function pushLocalConstants(machine, constArr){
-    for (let i=0;i<CONFIG.NUM_FIELDS;i++){
-      const v = constArr[i];
-      if (v !== '' && !isNaN(parseFloat(v))) {
-        localStorage.setItem(localKeyConst(machine, i), parseFloat(v).toFixed(2));
-      }
-    }
-  }
-
-  // Sticky lasers: pull/push last-used values per machine
-  function pullLocalLasers(machine){
-    const arr = [];
-    for (let i=0;i<CONFIG.NUM_FIELDS;i++){
-      const v = localStorage.getItem(localKeyVal(machine, i));
-      arr.push(v ?? '');
-    }
-    return arr;
-  }
-  function pushLocalLaser(machine, i, value){
-    if (value !== '' && !isNaN(parseFloat(value))) {
-      localStorage.setItem(localKeyVal(machine, i), parseFloat(value).toFixed(2));
-    }
-  }
-
-  // Cloud load/save
-  async function loadCloud(machine){
+  /******** Cloud I/O ********/
+  async function loadConstants(m){
     try{
-      setStatus(machine, 'Loading from cloud…');
-      const snap = await getDoc(machineDocRef(machine));
+      setStatus(m,"Loading from cloud…");
+      const snap = await getDoc(docRef(m));
       if (snap.exists()){
-        const data = snap.data();
-        const newConsts = state.machines[machine].const.slice();
-        for (let i=0;i<CONFIG.NUM_FIELDS;i++){
-          const v = data[`c${i+1}`];
-          if (typeof v === 'number') newConsts[i] = v.toFixed(2);
+        const d = snap.data();
+        const arr = state.data[m].const.slice();
+        for (let i=0;i<FIELDS;i++){
+          const v = d[`c${i+1}`];
+          if (typeof v === "number") arr[i] = v.toFixed(2);
         }
-        state.machines[machine].const = newConsts;
-        state.machines[machine].lastUpdated = data.lastUpdated ? new Date(data.lastUpdated) : new Date();
-        pushLocalConstants(machine, newConsts);
-        setStatus(machine, `Updated ${formatDate(state.machines[machine].lastUpdated)}`);
+        state.data[m].const = arr;
+        state.data[m].lastUpdated = d.lastUpdated ? new Date(d.lastUpdated) : new Date();
+        pushLocalConst(m, arr);
+        setStatus(m, `Updated ${fmtDate(state.data[m].lastUpdated)}`);
       } else {
-        setStatus(machine, 'No cloud values yet (using local if any).');
+        setStatus(m, "No cloud values yet (using local if any).");
       }
-    }catch(e){
-      setStatus(machine, 'Cloud load failed (using local if any).');
-      console.error(e);
-    }
+    }catch(e){ setStatus(m,"Cloud load failed (using local if any)."); console.error(e); }
   }
 
-  async function saveCloud(machine){
-    const constants = {};
-    for (let i=0;i<CONFIG.NUM_FIELDS;i++){
-      const v = parseFloat(state.machines[machine].const[i]);
-      if (isNaN(v)) { alert('Please fill all constants with valid numbers.'); return false; }
-      constants[`c${i+1}`] = v;
+  async function saveConstants(m){
+    const payload = {};
+    for (let i=0;i<FIELDS;i++){
+      const v = parseFloat(state.data[m].const[i]);
+      if (isNaN(v)) { alert("Please fill all constants with valid numbers."); return false; }
+      payload[`c${i+1}`] = v;
     }
     try{
-      const nowIso = new Date().toISOString();
-      await setDoc(machineDocRef(machine), { ...constants, lastUpdated: nowIso }, { merge:true });
+      const now = new Date().toISOString();
+      await setDoc(docRef(m), { ...payload, lastUpdated: now }, { merge:true });
       return true;
-    }catch(e){
-      console.error(e);
-      return false;
-    }
+    }catch(e){ console.error(e); return false; }
   }
 
-  /************ UI (Render + Events) ************/
-  function renderInputs(machine){
-    // constants
-    const constWrap = $(`#constInputs-${machine}`);
-    const constParts = [];
-    for (let i=0;i<CONFIG.NUM_FIELDS;i++){
-      constParts.push(`
-        <div>
-          <label for="const${i+1}-${machine}">Calibration Constant ${i+1}</label>
-          <input type="text" inputmode="numeric" pattern="[0-9]*"
-                 id="const${i+1}-${machine}" value="${state.machines[machine].const[i]||''}" placeholder="Calibration Constant ${i+1}" />
-        </div>`);
-    }
-    constWrap.innerHTML = constParts.join('');
-
-    // lasers (sticky auto-fill)
-    const valWrap = $(`#valueInputs-${machine}`);
-    const valParts = [];
-    for (let i=0;i<CONFIG.NUM_FIELDS;i++){
-      valParts.push(`
-        <div>
-          <label for="val${i+1}-${machine}">Laser ${i+1}</label>
-          <input type="text" inputmode="numeric" pattern="[0-9]*"
-                 id="val${i+1}-${machine}" value="${state.machines[machine].val[i]||''}" placeholder="Laser ${i+1}" />
-        </div>`);
-    }
-    valWrap.innerHTML = valParts.join('');
-
-    // buttons
-    const calcBtn = $(`#calcBtn-${machine}`);
-    calcBtn.disabled = !allLasersValid(machine);
-  }
-
-  // Event delegation for inputs (constants + lasers) and activeInput tracking
-  function attachInputHandlers(machine){
-    const constWrap = $(`#constInputs-${machine}`);
-    const valWrap  = $(`#valueInputs-${machine}`);
-    const debouncedCheck = debounce(()=> updateCalcButton(machine), 80);
-
-    const beforeInputGuard = (e)=>{
-      if (e.inputType === 'insertText' && /\d/.test(e.data)) {
-        const current = e.target.value || '';
-        const digits = current.replace(/\D/g,'');
-        const selection = e.target.selectionStart !== e.target.selectionEnd ? 0 : 1;
-        if (digits.length + selection > CONFIG.MAX_DIGITS) e.preventDefault();
+  async function loadLasers(m){
+    try{
+      const snap = await getDoc(docRef(m));
+      if (snap.exists()){
+        const d = snap.data(); const vals=[];
+        for (let i=0;i<FIELDS;i++){
+          const v = d[`l${i+1}`]; vals.push(typeof v==="number" ? v.toFixed(2) : "");
+        }
+        state.data[m].val = vals;
       }
-    };
-
-    const onConstInput = (e)=>{
-      if (!e.target.id.startsWith('const')) return;
-      const idx = parseInt(e.target.id.match(/^const(\d+)-/)[1],10)-1;
-      const formatted = bankFormat(e.target.value, CONFIG.MAX_DIGITS);
-      e.target.value = formatted;
-      state.machines[machine].const[idx] = formatted;
-    };
-
-    const onValInput = (e)=>{
-      if (!e.target.id.startsWith('val')) return;
-      const idx = parseInt(e.target.id.match(/^val(\d+)-/)[1],10)-1;
-      const formatted = bankFormat(e.target.value, CONFIG.MAX_DIGITS);
-      e.target.value = formatted;
-      state.machines[machine].val[idx] = formatted;
-      pushLocalLaser(machine, idx, formatted);
-      debouncedCheck();
-    };
-
-    const onFocusSelectAll = (e)=>{
-      if (e.target.tagName === 'INPUT') {
-        activeInput = e.target;             // <-- track current input
-        setTimeout(()=> e.target.select(),0);
-      }
-    };
-    const onClickTrack = (e)=>{
-      if (e.target.tagName === 'INPUT') activeInput = e.target; // clicks also track
-    };
-
-    constWrap.addEventListener('beforeinput', beforeInputGuard);
-    valWrap .addEventListener('beforeinput', beforeInputGuard);
-    constWrap.addEventListener('input', onConstInput);
-    valWrap .addEventListener('input', onValInput);
-    constWrap.addEventListener('focus', onFocusSelectAll, true);
-    valWrap .addEventListener('focus', onFocusSelectAll, true);
-    constWrap.addEventListener('click', onClickTrack, true);
-    valWrap .addEventListener('click', onClickTrack, true);
+    }catch(e){ console.error("Load lasers failed", e); }
   }
 
-  function allLasersValid(machine){
-    for (let i=0;i<CONFIG.NUM_FIELDS;i++){
-      if (isNaN(parseFloat(state.machines[machine].val[i]))) return false;
+  async function saveLasersOnce(m){
+    const payload = { lasersUpdated: new Date().toISOString() };
+    for (let i=0;i<FIELDS;i++){
+      const v = parseFloat(state.data[m].val[i]);
+      payload[`l${i+1}`] = isNaN(v) ? null : v;
     }
-    return true;
-  }
-  function updateCalcButton(machine){
-    const ok = allLasersValid(machine);
-    const btn = $(`#calcBtn-${machine}`);
-    btn.disabled = !ok;
-    for (let i=0;i<CONFIG.NUM_FIELDS;i++){
-      const el = $(`#val${i+1}-${machine}`);
-      if (!el) continue;
-      const v = parseFloat(el.value);
-      el.style.borderColor = isNaN(v) ? '#ef4444' : '#D1D5DB';
-    }
+    try{ await setDoc(docRef(m), payload, { merge:true }); }
+    catch(e){ console.error("Save lasers failed", e); }
   }
 
-  function calculate(machine){
-    let out = '';
-    for (let i=0;i<CONFIG.NUM_FIELDS;i++){
-      const c = parseFloat(state.machines[machine].const[i] || '0');
-      const v = parseFloat(state.machines[machine].val[i]   || '0');
-      out += `${machine} Laser ${i+1}: <b>${(v - c).toFixed(2)}</b><br>\n`;
+  /******** Render ********/
+  function inputBlock(id,label, val=""){
+    return `
+      <div>
+        <label for="${id}">${label}</label>
+        <input type="text" inputmode="numeric" pattern="[0-9]*" id="${id}" value="${val}" placeholder="${label}"/>
+      </div>`;
+  }
+
+  function renderMachine(m){
+    const c = state.data[m].const, v = state.data[m].val;
+    return `
+      <div id="panel-${m}" role="tabpanel" aria-labelledby="tab-${m}" ${m===state.current?"":"hidden"}>
+        <section aria-labelledby="lasers-${m}">
+          <h3 id="lasers-${m}">Enter Laser Values</h3>
+          <div class="input-group" id="values-${m}">
+            ${Array.from({length:FIELDS},(_,i)=>inputBlock(`val${i+1}-${m}`,`Laser ${i+1}`, v[i]||"")).join("")}
+          </div>
+          <div class="row-right">
+            <button type="button" class="tiny-chip" id="chip00-${m}" aria-label="Append double zero">.00</button>
+          </div>
+          <button id="calc-${m}" type="button" ${allLasersValid(m)?"":"disabled"}>Calculate</button>
+        </section>
+
+        <section aria-labelledby="const-${m}">
+          <div class="collapsible-toggle collapsed" id="constHdr-${m}" tabindex="0" role="button" aria-expanded="false" aria-controls="constBox-${m}">
+            Calibration Constants <span class="arrow">▶</span>
+          </div>
+          <div id="constBox-${m}" class="collapsible-content" role="region" aria-hidden="true">
+            <div class="input-group" id="consts-${m}">
+              ${Array.from({length:FIELDS},(_,i)=>inputBlock(`const${i+1}-${m}`,`Calibration Constant ${i+1}`, c[i]||"")).join("")}
+            </div>
+            <button id="save-${m}" type="button">Save Constants</button>
+            <div class="subtle" id="cloudStatus-${m}" aria-live="polite"></div>
+          </div>
+        </section>
+      </div>`;
+  }
+
+  function renderAll(){
+    $("#app").innerHTML = MACHINES.map(renderMachine).join("");
+    syncTabsUI();
+  }
+
+  /******** Validation & Calc ********/
+  function allLasersValid(m){
+    return state.data[m].val.every(x=>!isNaN(parseFloat(x)));
+  }
+
+  function recalc(m){
+    let out="";
+    for (let i=0;i<FIELDS;i++){
+      const c=parseFloat(state.data[m].const[i]||"0");
+      const v=parseFloat(state.data[m].val[i]||"0");
+      out += `${m} Laser ${i+1}: <b>${(v-c).toFixed(2)}</b><br>\n`;
     }
     results.style.opacity=0;
-    setTimeout(()=>{ results.innerHTML = out.trim(); results.style.opacity=1; }, 120);
+    setTimeout(()=>{ results.innerHTML=out.trim(); results.style.opacity=1; }, 120);
   }
 
-  function setupCalcButtons(machine){
-    $(`#calcBtn-${machine}`).addEventListener('click', ()=> calculate(machine));
-  }
-
-  function setupCollapsible(machine){
-    const header = $(`#calibration-header-${machine}`);
-    const panel  = $(`#constContent-${machine}`);
-    const arrow  = header.querySelector('.arrow');
-    const toggle = ()=>{
-      const expanded = header.getAttribute('aria-expanded')==='true';
-      header.setAttribute('aria-expanded', String(!expanded));
-      panel.classList.toggle('open');
-      header.classList.toggle('collapsed');
-      arrow.textContent = expanded ? '▶' : '▼';
-    };
-    header.addEventListener('click', toggle);
-    header.addEventListener('keydown', e=>{
-      if (e.key==='Enter' || e.key===' ') { e.preventDefault(); toggle(); }
-    });
-  }
-
-  function setupTabs(){
-    const tabs = document.querySelectorAll('.tab');
-    tabs.forEach(tab=>{
-      tab.addEventListener('click', ()=> activateTab(tab.id));
-      tab.addEventListener('keydown', e=>{
-        if (e.key==='ArrowRight' || e.key==='ArrowLeft'){
-          e.preventDefault();
-          const arr=[...tabs]; let idx = arr.indexOf(document.activeElement);
-          idx = (e.key==='ArrowRight') ? (idx+1)%arr.length : (idx-1+arr.length)%arr.length;
-          arr[idx].focus(); activateTab(arr[idx].id);
-        }
-      });
-    });
-  }
-
+  /******** Tabs ********/
   function activateTab(tabId){
-    document.querySelectorAll('.tab').forEach(tab=>{
-      const active = (tab.id === tabId);
-      tab.classList.toggle('active', active);
-      tab.setAttribute('aria-selected', active);
-      tab.setAttribute('tabindex', active ? '0' : '-1');
-      const panel = document.getElementById(tab.getAttribute('aria-controls'));
-      if (panel) panel.hidden = !active;
+    const m = tabId.replace("tab-","");
+    state.current = m;
+    $$("[role=tabpanel]").forEach(p=>p.hidden = (p.id !== `panel-${m}`));
+    $$(".tab").forEach(t=>{
+      const on = t.id === tabId;
+      t.classList.toggle("active", on);
+      t.setAttribute("aria-selected", on);
+      t.setAttribute("tabindex", on?"0":"-1");
     });
-    const m = tabId.replace('tab-','');
-    state.currentMachine = m;
-
-    const url = new URL(window.location.href);
-    url.searchParams.set('m', m);
-    history.replaceState({}, '', url.toString());
-
-    results.textContent = '';
+    const url = new URL(location.href); url.searchParams.set("m", m); history.replaceState({}, "", url.toString());
+    results.textContent="";
   }
 
-  // .00 pill: append two zeros to the currently focused Laser input (or Laser 1) in that machine
-  function appendDoubleZero(machine){
-    let target = activeInput;
-    const panel = document.getElementById(`machine-${machine}`);
-    const validLaserHere = target && panel.contains(target) && /^val\d+-/.test(target.id);
+  function syncTabsUI(){
+    $$(".tab").forEach(t=>{
+      const on = t.id === `tab-${state.current}`;
+      t.classList.toggle("active", on);
+      t.setAttribute("aria-selected", on);
+      t.setAttribute("tabindex", on?"0":"-1");
+    });
+  }
 
-    if (!validLaserHere) {
-      target = document.getElementById(`val1-${machine}`); // fallback
-      if (!target) return;
-      activeInput = target;
+  /******** Event Delegation ********/
+  document.addEventListener("focusin", (e)=>{
+    if (e.target.tagName==="INPUT") activeInput = e.target;
+  });
+
+  // Beforeinput guard: cap raw digits length
+  document.addEventListener("beforeinput", (e)=>{
+    const el = e.target;
+    if (el.tagName!=="INPUT") return;
+    if (e.inputType==="insertText" && /\d/.test(e.data)){
+      const digits = (el.value||"").replace(/\D/g,"");
+      const selectionRoom = el.selectionStart !== el.selectionEnd ? 0 : 1;
+      if (digits.length + selectionRoom > MAX_DIGITS) e.preventDefault();
+    }
+  });
+
+  // Input formatting (both lasers & constants)
+  document.addEventListener("input", (e)=>{
+    const el = e.target;
+    if (el.tagName!=="INPUT") return;
+    const id = el.id;
+    if (!/^((val|const)\d+)-(J95|J149)$/.test(id)) return;
+
+    el.value = bankFormat(el.value);
+    const [,kind, idxStr, mach] = id.match(/^(val|const)(\d+)-(J95|J149)$/);
+    const i = parseInt(idxStr,10)-1;
+
+    if (kind==="val"){
+      state.data[mach].val[i] = el.value;
+      // inline validity UI
+      isNaN(parseFloat(el.value)) ? ringBad(el) : ringOk(el);
+      // enable/disable calculate
+      const btn = $(`#calc-${mach}`);
+      btn && (btn.disabled = !allLasersValid(mach));
+    } else {
+      state.data[mach].const[i] = el.value;
+    }
+  });
+
+  // Clicks: tabs / collapsible / buttons (.00, Save, Calculate)
+  document.addEventListener("click", async (e)=>{
+    const t = e.target;
+
+    // Tabs
+    if (t.classList.contains("tab")) return activateTab(t.id);
+
+    // Collapsible headers
+    if (t.id.startsWith("constHdr-") || t.closest(".collapsible-toggle")){
+      const hdr = t.id ? t : t.closest(".collapsible-toggle");
+      const m = hdr.id.replace("constHdr-","");
+      const box = $(`#constBox-${m}`), arrow = hdr.querySelector(".arrow");
+      const expanded = hdr.getAttribute("aria-expanded")==="true";
+      hdr.setAttribute("aria-expanded", String(!expanded));
+      box.classList.toggle("open"); hdr.classList.toggle("collapsed");
+      arrow.textContent = expanded ? "▶" : "▼";
+      return;
     }
 
-    // Append 00 with cap, then format and update state
-    let digits = String(target.value||'').replace(/\D/g,'');
-    digits = (digits + '00').slice(0, CONFIG.MAX_DIGITS);
-    const formatted = bankFormat(digits, CONFIG.MAX_DIGITS);
+    // .00 pill
+    if (t.id.startsWith("chip00-")){
+      const m = t.id.replace("chip00-","");
+      let target = activeInput;
+      const panel = $(`#panel-${m}`);
+      const isLaserHere = target && panel.contains(target) && /^val\d+-/.test(target.id);
+      if (!isLaserHere){ target = $(`#val1-${m}`); if (!target) return; activeInput = target; }
+      let digits = String(target.value||"").replace(/\D/g,"");
+      digits = (digits + "00").slice(0, MAX_DIGITS);
+      target.value = bankFormat(digits);
+      const i = parseInt(target.id.match(/^val(\d+)-/)[1],10)-1;
+      state.data[m].val[i] = target.value;
+      const btn = $(`#calc-${m}`); btn && (btn.disabled = !allLasersValid(m));
+      return;
+    }
 
-    target.value = formatted;
-    const idx = parseInt(target.id.match(/^val(\d+)-/)[1],10) - 1;
-    state.machines[machine].val[idx] = formatted;
-    pushLocalLaser(machine, idx, formatted);
-    updateCalcButton(machine);
-  }
-
-  function setupChipButtons(){
-    document.getElementById('chip00-J95') .addEventListener('click', ()=> appendDoubleZero('J95'));
-    document.getElementById('chip00-J149').addEventListener('click', ()=> appendDoubleZero('J149'));
-  }
-
-  function getMachineFromUrl(){
-    const m = (new URLSearchParams(window.location.search).get('m') || '').toUpperCase();
-    return CONFIG.MACHINES.includes(m) ? m : null;
-  }
-
-  function setupSaveButtons(machine){
-    $(`#saveBtn-${machine}`).addEventListener('click', ()=>{
-      // normalize constants → state + local
-      for (let i=0;i<CONFIG.NUM_FIELDS;i++){
-        const el = document.getElementById(`const${i+1}-${machine}`);
-        const formatted = bankFormat(el.value, CONFIG.MAX_DIGITS);
-        el.value = formatted;
-        state.machines[machine].const[i] = formatted;
+    // Save Constants
+    if (t.id.startsWith("save-")){
+      const m = t.id.replace("save-","");
+      // normalize + mirror local
+      for (let i=0;i<FIELDS;i++){
+        const el = $(`#const${i+1}-${m}`);
+        el.value = bankFormat(el.value);
+        state.data[m].const[i] = el.value;
       }
-      pushLocalConstants(machine, state.machines[machine].const);
-
+      pushLocalConst(m, state.data[m].const);
       // optimistic UI
-      const now = new Date();
-      state.machines[machine].lastUpdated = now;
-      setStatus(machine, `Updated ${formatDate(now)}`);
-      const btn = $(`#saveBtn-${machine}`);
-      btn.textContent = 'Saved ✓';
-      setTimeout(()=> btn.textContent='Save Constants', 1500);
-
-      // background sync
-      saveCloud(machine).then(ok=>{
-        if (!ok) setStatus(machine, 'Cloud save failed (saved locally).');
-      });
-    });
-  }
-
-  /************ INIT ************/
-  async function init(){
-    // Seed from local, including sticky lasers
-    for (const machine of CONFIG.MACHINES){
-      state.machines[machine].const = pullLocalConstants(machine);
-      state.machines[machine].val   = pullLocalLasers(machine);
-      renderInputs(machine);
-      attachInputHandlers(machine);
-      setupCalcButtons(machine);
-      setupCollapsible(machine);
-      setupSaveButtons(machine);
-
-      // Refresh constants from cloud after initial render
-      loadCloud(machine).then(()=> renderInputs(machine));
+      const now = new Date(); state.data[m].lastUpdated = now;
+      setStatus(m, `Updated ${fmtDate(now)}`); t.textContent="Saved ✓"; setTimeout(()=> t.textContent="Save Constants",1500);
+      // background save
+      const ok = await saveConstants(m); if (!ok) setStatus(m, "Cloud save failed (saved locally).");
+      return;
     }
-    setupTabs();
-    setupChipButtons();
 
-    // Deep link via ?m=
-    const urlMachine = getMachineFromUrl() || 'J95';
-    activateTab('tab-' + urlMachine);
+    // Calculate
+    if (t.id.startsWith("calc-")){
+      const m = t.id.replace("calc-","");
+      recalc(m);
+      await saveLasersOnce(m); // sticky lasers only when Calculate
+      return;
+    }
+  });
+
+  // Keyboard on tabs (left/right)
+  document.addEventListener("keydown",(e)=>{
+    if (!["ArrowLeft","ArrowRight"].includes(e.key)) return;
+    const tabs = $$(".tab"); const idx = tabs.indexOf(document.activeElement);
+    if (idx===-1) return;
+    e.preventDefault();
+    const next = e.key==="ArrowRight" ? (idx+1)%tabs.length : (idx-1+tabs.length)%tabs.length;
+    tabs[next].focus(); activateTab(tabs[next].id);
+  });
+
+  /******** Init ********/
+  async function init(){
+    // seed constants from local mirror for quick paint
+    MACHINES.forEach(m=> state.data[m].const = pullLocalConst(m));
+    // load cloud constants & lasers, then render
+    await Promise.all(MACHINES.flatMap(m=>[loadConstants(m), loadLasers(m)]));
+    renderAll();
+
+    // Deep link ?m=
+    const m = qsMachine() || "J95";
+    state.current = m; activateTab(`tab-${m}`);
   }
-
   init();
 </script>
-
 </body>
 </html>
