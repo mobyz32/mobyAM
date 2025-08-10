@@ -84,7 +84,6 @@
     <h3 id="lasers-header-J95">Enter Laser Values</h3>
     <div class="input-group" id="valueInputs-J95" role="group" aria-label="Laser input fields for J95"></div>
 
-    <!-- .00 pill above Calculate -->
     <div class="row-right">
       <button type="button" class="tiny-chip" id="chip00-J95" aria-label="Append double zero to current laser field">.00</button>
     </div>
@@ -109,7 +108,6 @@
     <h3 id="lasers-header-J149">Enter Laser Values</h3>
     <div class="input-group" id="valueInputs-J149" role="group" aria-label="Laser input fields for J149"></div>
 
-    <!-- .00 pill above Calculate -->
     <div class="row-right">
       <button type="button" class="tiny-chip" id="chip00-J149" aria-label="Append double zero to current laser field">.00</button>
     </div>
@@ -166,7 +164,7 @@
   const $ = (sel, root=document) => root.querySelector(sel);
   const results = $('#results');
 
-  // App state: constants + transient laser values + lastUpdated
+  // App state: constants + sticky laser values + lastUpdated
   const state = {
     currentMachine: 'J95',
     machines: {
@@ -189,13 +187,14 @@
   }
 
   function machineDocRef(machine){ return doc(db, "constants", machine); }
-  function localKey(machine, i){ return `${machine}_const${i+1}`; }
+  function localKeyConst(machine, i){ return `${machine}_const${i+1}`; }
+  function localKeyVal(machine, i){ return `${machine}_val${i+1}`; }  // <-- sticky lasers
 
   // Local storage sync for constants
   function pullLocalConstants(machine){
     const arr = [];
     for (let i=0;i<CONFIG.NUM_FIELDS;i++){
-      const v = localStorage.getItem(localKey(machine, i));
+      const v = localStorage.getItem(localKeyConst(machine, i));
       arr.push(v ?? '');
     }
     return arr;
@@ -204,8 +203,23 @@
     for (let i=0;i<CONFIG.NUM_FIELDS;i++){
       const v = constArr[i];
       if (v !== '' && !isNaN(parseFloat(v))) {
-        localStorage.setItem(localKey(machine, i), parseFloat(v).toFixed(2));
+        localStorage.setItem(localKeyConst(machine, i), parseFloat(v).toFixed(2));
       }
+    }
+  }
+
+  // Sticky lasers: pull/push last-used values per machine
+  function pullLocalLasers(machine){
+    const arr = [];
+    for (let i=0;i<CONFIG.NUM_FIELDS;i++){
+      const v = localStorage.getItem(localKeyVal(machine, i));
+      arr.push(v ?? '');
+    }
+    return arr;
+  }
+  function pushLocalLaser(machine, i, value){
+    if (value !== '' && !isNaN(parseFloat(value))) {
+      localStorage.setItem(localKeyVal(machine, i), parseFloat(value).toFixed(2));
     }
   }
 
@@ -243,14 +257,11 @@
       constants[`c${i+1}`] = v;
     }
     try{
-      setStatus(machine, 'Saving to cloud…');
       const nowIso = new Date().toISOString();
       await setDoc(machineDocRef(machine), { ...constants, lastUpdated: nowIso }, { merge:true });
-      state.machines[machine].lastUpdated = new Date(nowIso);
-      setStatus(machine, `Updated ${formatDate(state.machines[machine].lastUpdated)}`);
+      // success: nothing else to do; UI already optimistically updated
       return true;
     }catch(e){
-      setStatus(machine, 'Cloud save failed (using local values).');
       console.error(e);
       return false;
     }
@@ -271,7 +282,7 @@
     }
     constWrap.innerHTML = constParts.join('');
 
-    // lasers
+    // lasers (sticky auto-fill)
     const valWrap = $(`#valueInputs-${machine}`);
     const valParts = [];
     for (let i=0;i<CONFIG.NUM_FIELDS;i++){
@@ -319,6 +330,10 @@
       const formatted = bankFormat(e.target.value, CONFIG.MAX_DIGITS);
       e.target.value = formatted;
       state.machines[machine].val[idx] = formatted;
+
+      // STICKY: persist last-used laser value immediately
+      pushLocalLaser(machine, idx, formatted);
+
       debouncedCheck();
     };
 
@@ -344,7 +359,6 @@
     const ok = allLasersValid(machine);
     const btn = $(`#calcBtn-${machine}`);
     btn.disabled = !ok;
-    // optional red border on invalid
     for (let i=0;i<CONFIG.NUM_FIELDS;i++){
       const el = $(`#val${i+1}-${machine}`);
       if (!el) continue;
@@ -411,11 +425,12 @@
     });
     const m = tabId.replace('tab-','');
     state.currentMachine = m;
-    // sync URL for bookmarking/QR
+
+    // keep URL in sync (QR/bookmark)
     const url = new URL(window.location.href);
     url.searchParams.set('m', m);
     history.replaceState({}, '', url.toString());
-    // Clear results on tab switch
+
     results.textContent = '';
   }
 
@@ -434,6 +449,7 @@
     target.value = formatted;
     const idx = parseInt(target.id.match(/^val(\d+)-/)[1],10) - 1;
     state.machines[machine].val[idx] = formatted;
+    pushLocalLaser(machine, idx, formatted); // keep sticky in sync
     updateCalcButton(machine);
   }
 
@@ -448,26 +464,45 @@
   }
 
   function setupSaveButtons(machine){
-    $(`#saveBtn-${machine}`).addEventListener('click', async ()=>{
+    $(`#saveBtn-${machine}`).addEventListener('click', ()=>{
+      // Normalize constants to local & state first
+      for (let i=0;i<CONFIG.NUM_FIELDS;i++){
+        const el = document.getElementById(`const${i+1}-${machine}`);
+        const formatted = bankFormat(el.value, CONFIG.MAX_DIGITS);
+        el.value = formatted;
+        state.machines[machine].const[i] = formatted;
+      }
       pushLocalConstants(machine, state.machines[machine].const);
-      const ok = await saveCloud(machine);
+
+      // OPTIMISTIC UI: show updated now
+      const now = new Date();
+      state.machines[machine].lastUpdated = now;
+      setStatus(machine, `Updated ${formatDate(now)}`);
       const btn = $(`#saveBtn-${machine}`);
-      btn.textContent = ok ? 'Saved ✓' : 'Save Constants';
-      if (ok) setTimeout(()=> btn.textContent='Save Constants', 1500);
+      btn.textContent = 'Saved ✓';
+      setTimeout(()=> btn.textContent='Save Constants', 1500);
+
+      // Then sync to Firestore in the background
+      saveCloud(machine).then(ok=>{
+        if (!ok) setStatus(machine, 'Cloud save failed (saved locally).');
+      });
     });
   }
 
   /************ INIT ************/
   async function init(){
-    // Seed state from local first (fast UI), render, attach handlers, then cloud refresh
+    // Seed state from local first (fast UI), including STICKY lasers
     for (const machine of CONFIG.MACHINES){
       state.machines[machine].const = pullLocalConstants(machine);
+      state.machines[machine].val   = pullLocalLasers(machine);   // <-- sticky values loaded
       renderInputs(machine);
       attachInputHandlers(machine);
       setupCalcButtons(machine);
       setupCollapsible(machine);
       setupSaveButtons(machine);
-      loadCloud(machine).then(()=> renderInputs(machine)); // refresh with cloud values when ready
+
+      // Cloud refresh constants; re-render when ready
+      loadCloud(machine).then(()=> renderInputs(machine));
     }
     setupTabs();
     setupChipButtons();
