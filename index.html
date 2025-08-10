@@ -151,7 +151,7 @@
   const app = initializeApp(firebaseConfig);
   const db = getFirestore(app);
   // Offline persistence (best effort)
-  enableIndexedDbPersistence(db).catch(() => { /* fine if not available */ });
+  enableIndexedDbPersistence(db).catch(() => { /* ok if not available */ });
 
   /************ CONFIG / STATE ************/
   const CONFIG = {
@@ -173,12 +173,15 @@
     }
   };
 
+  // Track currently focused input (any input). Used by .00 pill.
+  let activeInput = null;
+
   /************ UTILITIES ************/
   const formatDate = (d) => `${String(d.getDate()).padStart(2,'0')} ${monthNames[d.getMonth()]} ${d.getFullYear()}`;
   const setStatus = (machine, text) => { const el = $(`#cloudStatus-${machine}`); if (el) el.textContent = text; };
   const debounce = (fn, ms=80) => { let t; return (...args)=>{ clearTimeout(t); t=setTimeout(()=>fn(...args), ms); }; };
 
-  // Bank formatter pipeline: digits → cap → /100 → fixed(2)
+  // Bank formatter: digits → cap → /100 → fixed(2)
   function bankFormat(raw, maxDigits){
     let digits = String(raw||'').replace(/\D/g,'');
     if (!digits) return '';
@@ -188,7 +191,7 @@
 
   function machineDocRef(machine){ return doc(db, "constants", machine); }
   function localKeyConst(machine, i){ return `${machine}_const${i+1}`; }
-  function localKeyVal(machine, i){ return `${machine}_val${i+1}`; }  // <-- sticky lasers
+  function localKeyVal(machine, i){ return `${machine}_val${i+1}`; }  // sticky lasers
 
   // Local storage sync for constants
   function pullLocalConstants(machine){
@@ -249,7 +252,6 @@
   }
 
   async function saveCloud(machine){
-    // Only save if all constants are valid numbers
     const constants = {};
     for (let i=0;i<CONFIG.NUM_FIELDS;i++){
       const v = parseFloat(state.machines[machine].const[i]);
@@ -259,7 +261,6 @@
     try{
       const nowIso = new Date().toISOString();
       await setDoc(machineDocRef(machine), { ...constants, lastUpdated: nowIso }, { merge:true });
-      // success: nothing else to do; UI already optimistically updated
       return true;
     }catch(e){
       console.error(e);
@@ -300,14 +301,13 @@
     calcBtn.disabled = !allLasersValid(machine);
   }
 
-  // Event delegation for inputs (constants + lasers)
+  // Event delegation for inputs (constants + lasers) and activeInput tracking
   function attachInputHandlers(machine){
     const constWrap = $(`#constInputs-${machine}`);
     const valWrap  = $(`#valueInputs-${machine}`);
     const debouncedCheck = debounce(()=> updateCalcButton(machine), 80);
 
     const beforeInputGuard = (e)=>{
-      // prevent exceeding MAX_DIGITS for numeric insert
       if (e.inputType === 'insertText' && /\d/.test(e.data)) {
         const current = e.target.value || '';
         const digits = current.replace(/\D/g,'');
@@ -330,15 +330,18 @@
       const formatted = bankFormat(e.target.value, CONFIG.MAX_DIGITS);
       e.target.value = formatted;
       state.machines[machine].val[idx] = formatted;
-
-      // STICKY: persist last-used laser value immediately
       pushLocalLaser(machine, idx, formatted);
-
       debouncedCheck();
     };
 
     const onFocusSelectAll = (e)=>{
-      if (e.target.tagName === 'INPUT') setTimeout(()=> e.target.select(),0);
+      if (e.target.tagName === 'INPUT') {
+        activeInput = e.target;             // <-- track current input
+        setTimeout(()=> e.target.select(),0);
+      }
+    };
+    const onClickTrack = (e)=>{
+      if (e.target.tagName === 'INPUT') activeInput = e.target; // clicks also track
     };
 
     constWrap.addEventListener('beforeinput', beforeInputGuard);
@@ -347,6 +350,8 @@
     valWrap .addEventListener('input', onValInput);
     constWrap.addEventListener('focus', onFocusSelectAll, true);
     valWrap .addEventListener('focus', onFocusSelectAll, true);
+    constWrap.addEventListener('click', onClickTrack, true);
+    valWrap .addEventListener('click', onClickTrack, true);
   }
 
   function allLasersValid(machine){
@@ -426,7 +431,6 @@
     const m = tabId.replace('tab-','');
     state.currentMachine = m;
 
-    // keep URL in sync (QR/bookmark)
     const url = new URL(window.location.href);
     url.searchParams.set('m', m);
     history.replaceState({}, '', url.toString());
@@ -434,22 +438,27 @@
     results.textContent = '';
   }
 
-  // .00 pill: append two zeros to current laser (or Laser 1) for that machine
+  // .00 pill: append two zeros to the currently focused Laser input (or Laser 1) in that machine
   function appendDoubleZero(machine){
-    let target = document.activeElement;
+    let target = activeInput;
     const panel = document.getElementById(`machine-${machine}`);
-    const onLaserHere = target && panel.contains(target) && /^val\d+-/.test(target.id);
-    if (!onLaserHere) target = document.getElementById(`val1-${machine}`);
-    if (!target) return;
+    const validLaserHere = target && panel.contains(target) && /^val\d+-/.test(target.id);
 
+    if (!validLaserHere) {
+      target = document.getElementById(`val1-${machine}`); // fallback
+      if (!target) return;
+      activeInput = target;
+    }
+
+    // Append 00 with cap, then format and update state
     let digits = String(target.value||'').replace(/\D/g,'');
-    digits = (digits + '00').slice(0, CONFIG.MAX_DIGITS); // respect cap
+    digits = (digits + '00').slice(0, CONFIG.MAX_DIGITS);
     const formatted = bankFormat(digits, CONFIG.MAX_DIGITS);
 
     target.value = formatted;
     const idx = parseInt(target.id.match(/^val(\d+)-/)[1],10) - 1;
     state.machines[machine].val[idx] = formatted;
-    pushLocalLaser(machine, idx, formatted); // keep sticky in sync
+    pushLocalLaser(machine, idx, formatted);
     updateCalcButton(machine);
   }
 
@@ -465,7 +474,7 @@
 
   function setupSaveButtons(machine){
     $(`#saveBtn-${machine}`).addEventListener('click', ()=>{
-      // Normalize constants to local & state first
+      // normalize constants → state + local
       for (let i=0;i<CONFIG.NUM_FIELDS;i++){
         const el = document.getElementById(`const${i+1}-${machine}`);
         const formatted = bankFormat(el.value, CONFIG.MAX_DIGITS);
@@ -474,7 +483,7 @@
       }
       pushLocalConstants(machine, state.machines[machine].const);
 
-      // OPTIMISTIC UI: show updated now
+      // optimistic UI
       const now = new Date();
       state.machines[machine].lastUpdated = now;
       setStatus(machine, `Updated ${formatDate(now)}`);
@@ -482,7 +491,7 @@
       btn.textContent = 'Saved ✓';
       setTimeout(()=> btn.textContent='Save Constants', 1500);
 
-      // Then sync to Firestore in the background
+      // background sync
       saveCloud(machine).then(ok=>{
         if (!ok) setStatus(machine, 'Cloud save failed (saved locally).');
       });
@@ -491,23 +500,23 @@
 
   /************ INIT ************/
   async function init(){
-    // Seed state from local first (fast UI), including STICKY lasers
+    // Seed from local, including sticky lasers
     for (const machine of CONFIG.MACHINES){
       state.machines[machine].const = pullLocalConstants(machine);
-      state.machines[machine].val   = pullLocalLasers(machine);   // <-- sticky values loaded
+      state.machines[machine].val   = pullLocalLasers(machine);
       renderInputs(machine);
       attachInputHandlers(machine);
       setupCalcButtons(machine);
       setupCollapsible(machine);
       setupSaveButtons(machine);
 
-      // Cloud refresh constants; re-render when ready
+      // Refresh constants from cloud after initial render
       loadCloud(machine).then(()=> renderInputs(machine));
     }
     setupTabs();
     setupChipButtons();
 
-    // Deep link to machine via ?m=
+    // Deep link via ?m=
     const urlMachine = getMachineFromUrl() || 'J95';
     activateTab('tab-' + urlMachine);
   }
