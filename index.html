@@ -23,10 +23,11 @@
     label{display:block;font-weight:600;font-size:.85rem;color:var(--label);margin-bottom:4px}
     input[type="text"]{width:100%;padding:10px 12px;font-size:1rem;border:1.5px solid #D1D5DB;border-radius:8px;transition:border-color .2s ease,box-shadow .2s ease,background .2s ease;background:var(--panel);color:var(--text)}
     input[type="text"]:focus{outline:none;border-color:var(--primary);background:#fff;box-shadow:0 0 0 4px var(--ring)}
-    button{width:100%;background:var(--primary);color:#fff;border:none;padding:14px 0;border-radius:10px;font-weight:700;font-size:1.05rem;cursor:pointer;transition:transform .06s ease,background .2s ease,box-shadow .2s ease;user-select:none;margin-top:1.2rem;box-shadow:0 8px 18px var(--shadow)}
+    button{background:var(--primary);color:#fff;border:none;padding:14px 16px;border-radius:10px;font-weight:700;font-size:1.05rem;cursor:pointer;transition:transform .06s ease,background .2s ease,box-shadow .2s ease;user-select:none;box-shadow:0 8px 18px var(--shadow)}
     button:active{transform:translateY(1px)}
     button:disabled{background:#FCD7AE;cursor:not-allowed;box-shadow:none}
     button:not(:disabled):hover{background:var(--primary-hover);box-shadow:0 10px 22px var(--shadow)}
+    .full{width:100%;margin-top:1.2rem}
     #results{padding:18px 20px;font-size:1.05rem;color:var(--text);background:#fff;border:1px solid var(--border);border-radius:10px;box-shadow:0 6px 14px rgba(0,0,0,.05);min-height:68px;white-space:pre-wrap;font-family:'Segoe UI Mono',Consolas,monospace;user-select:text;transition:opacity .25s ease}
     #results b{color:var(--primary-hover)}
     .collapsed .arrow{transform:rotate(-90deg)}
@@ -34,10 +35,14 @@
     .collapsible-content.open{max-height:600px;opacity:1;pointer-events:auto;user-select:auto}
     .arrow{transition:transform .3s ease;font-size:1.1rem;color:var(--label)}
     .subtle{font-size:.82rem;color:var(--label);text-align:center;margin-top:.5rem}
-    .row-right{display:flex;justify-content:flex-end;align-items:center;margin-top:6px;margin-bottom:6px}
-    .tiny-chip{font:inherit;font-weight:700;padding:6px 10px;line-height:1;border-radius:999px;background:#fff;color:var(--primary);border:2px solid var(--primary);cursor:pointer;user-select:none;transition:background .15s ease,color .15s ease,box-shadow .2s ease,transform .06s ease;box-shadow:0 2px 6px rgba(0,0,0,.05)}
-    .tiny-chip:hover{background:#FFF7EE}
-    .tiny-chip:active{transform:translateY(1px)}
+    .row-right{display:flex;justify-content:flex-end;align-items:center;gap:8px;margin-top:6px;margin-bottom:6px}
+    .tiny-chip, .tiny-clear{
+      font:inherit;font-weight:700;padding:8px 12px;line-height:1;border-radius:999px;background:#fff;color:var(--primary);
+      border:2px solid var(--primary);cursor:pointer;user-select:none;transition:background .15s ease,color .15s ease,box-shadow .2s ease,transform .06s ease;box-shadow:0 2px 6px rgba(0,0,0,.05)
+    }
+    .tiny-chip:hover,.tiny-clear:hover{background:#FFF7EE}
+    .tiny-chip:active,.tiny-clear:active{transform:translateY(1px)}
+    .tiny-clear{color:#9A5B12;border-color:#E6A355}
   </style>
 </head>
 <body>
@@ -49,7 +54,6 @@
   <div class="tab"         role="tab" tabindex="-1" aria-selected="false" aria-controls="panel-J149" id="tab-J149">J149</div>
 </div>
 
-<!-- Panels will be rendered here -->
 <div id="app"></div>
 
 <section aria-live="polite" aria-atomic="true" aria-relevant="additions">
@@ -88,14 +92,12 @@
     current: "J95",
     data: Object.fromEntries(MACHINES.map(m=>[m,{const:Array(FIELDS).fill(""), val:Array(FIELDS).fill(""), lastUpdated:null}]))
   };
-  let activeInput = null; // last-focused input
+  let activeInput = null;
 
   /******** Utils ********/
   const fmtDate = d => `${String(d.getDate()).padStart(2,"0")} ${month[d.getMonth()]} ${d.getFullYear()}`;
-  const ringOk  = el => el && (el.style.borderColor = "#D1D5DB");
-  const ringBad = el => el && (el.style.borderColor = "#ef4444");
   const setStatus = (m, t)=> { const el = $(`#cloudStatus-${m}`); if (el) el.textContent = t; };
-  const bankFormat = (raw)=>{
+  const bankFormat = raw => {
     let digits = String(raw||"").replace(/\D/g,"");
     if (!digits) return "";
     if (digits.length > MAX_DIGITS) digits = digits.slice(0, MAX_DIGITS);
@@ -104,14 +106,8 @@
   const docRef = m => doc(db, "constants", m);
   const lkey   = (m,i)=>`${m}_const${i+1}`;
 
-  // fast local mirror for constants only
   const pullLocalConst = m => Array.from({length:FIELDS},(_,i)=>localStorage.getItem(lkey(m,i)) ?? "");
   const pushLocalConst = (m, arr)=> arr.forEach((v,i)=>{ if(v!=="" && !isNaN(parseFloat(v))) localStorage.setItem(lkey(m,i), parseFloat(v).toFixed(2)); });
-
-  const qsMachine = ()=> {
-    const p = new URLSearchParams(location.search).get("m");
-    return MACHINES.includes((p||"").toUpperCase()) ? p.toUpperCase() : null;
-  };
 
   /******** Cloud I/O ********/
   async function loadConstants(m){
@@ -129,9 +125,7 @@
         state.data[m].lastUpdated = d.lastUpdated ? new Date(d.lastUpdated) : new Date();
         pushLocalConst(m, arr);
         setStatus(m, `Updated ${fmtDate(state.data[m].lastUpdated)}`);
-      } else {
-        setStatus(m, "No cloud values yet (using local if any).");
-      }
+      } else { setStatus(m, "No cloud values yet (using local if any)."); }
     }catch(e){ setStatus(m,"Cloud load failed (using local if any)."); console.error(e); }
   }
 
@@ -153,7 +147,7 @@
     try{
       const snap = await getDoc(docRef(m));
       if (snap.exists()){
-        const d = snap.data(); const vals=[];
+        const d = snap.data(), vals=[];
         for (let i=0;i<FIELDS;i++){
           const v = d[`l${i+1}`]; vals.push(typeof v==="number" ? v.toFixed(2) : "");
         }
@@ -191,9 +185,10 @@
             ${Array.from({length:FIELDS},(_,i)=>inputBlock(`val${i+1}-${m}`,`Laser ${i+1}`, v[i]||"")).join("")}
           </div>
           <div class="row-right">
-            <button type="button" class="tiny-chip" id="chip00-${m}" aria-label="Append double zero">.00</button>
+            <button type="button" class="tiny-clear" id="clear-${m}" aria-label="Clear lasers">Clear</button>
+            <button type="button" class="tiny-chip"  id="chip00-${m}" aria-label="Append double zero">.00</button>
           </div>
-          <button id="calc-${m}" type="button" ${allLasersValid(m)?"":"disabled"}>Calculate</button>
+          <button id="calc-${m}" class="full" type="button" ${allLasersValid(m)?"":"disabled"}>Calculate</button>
         </section>
 
         <section aria-labelledby="const-${m}">
@@ -204,7 +199,7 @@
             <div class="input-group" id="consts-${m}">
               ${Array.from({length:FIELDS},(_,i)=>inputBlock(`const${i+1}-${m}`,`Calibration Constant ${i+1}`, c[i]||"")).join("")}
             </div>
-            <button id="save-${m}" type="button">Save Constants</button>
+            <button id="save-${m}" class="full" type="button">Save Constants</button>
             <div class="subtle" id="cloudStatus-${m}" aria-live="polite"></div>
           </div>
         </section>
@@ -217,9 +212,7 @@
   }
 
   /******** Validation & Calc ********/
-  function allLasersValid(m){
-    return state.data[m].val.every(x=>!isNaN(parseFloat(x)));
-  }
+  function allLasersValid(m){ return state.data[m].val.every(x=>!isNaN(parseFloat(x))); }
 
   function recalc(m){
     let out="";
@@ -236,7 +229,7 @@
   function activateTab(tabId){
     const m = tabId.replace("tab-","");
     state.current = m;
-    $$("[role=tabpanel]").forEach(p=>p.hidden = (p.id !== `panel-${m}`));
+    $("[role=tabpanel]") && $$("[role=tabpanel]").forEach(p=>p.hidden = (p.id !== `panel-${m}`));
     $$(".tab").forEach(t=>{
       const on = t.id === tabId;
       t.classList.toggle("active", on);
@@ -246,7 +239,6 @@
     const url = new URL(location.href); url.searchParams.set("m", m); history.replaceState({}, "", url.toString());
     results.textContent="";
   }
-
   function syncTabsUI(){
     $$(".tab").forEach(t=>{
       const on = t.id === `tab-${state.current}`;
@@ -256,12 +248,11 @@
     });
   }
 
-  /******** Event Delegation ********/
+  /******** Events ********/
   document.addEventListener("focusin", (e)=>{
     if (e.target.tagName==="INPUT") activeInput = e.target;
   });
 
-  // Beforeinput guard: cap raw digits length
   document.addEventListener("beforeinput", (e)=>{
     const el = e.target;
     if (el.tagName!=="INPUT") return;
@@ -272,12 +263,11 @@
     }
   });
 
-  // Input formatting (both lasers & constants)
   document.addEventListener("input", (e)=>{
     const el = e.target;
     if (el.tagName!=="INPUT") return;
     const id = el.id;
-    if (!/^((val|const)\d+)-(J95|J149)$/.test(id)) return;
+    if (!/^(val|const)\d+-(J95|J149)$/.test(id)) return;
 
     el.value = bankFormat(el.value);
     const [,kind, idxStr, mach] = id.match(/^(val|const)(\d+)-(J95|J149)$/);
@@ -285,24 +275,18 @@
 
     if (kind==="val"){
       state.data[mach].val[i] = el.value;
-      // inline validity UI
-      isNaN(parseFloat(el.value)) ? ringBad(el) : ringOk(el);
-      // enable/disable calculate
-      const btn = $(`#calc-${mach}`);
-      btn && (btn.disabled = !allLasersValid(mach));
+      const btn = $(`#calc-${mach}`); btn && (btn.disabled = !allLasersValid(mach));
+      el.style.borderColor = isNaN(parseFloat(el.value)) ? "#ef4444" : "#D1D5DB";
     } else {
       state.data[mach].const[i] = el.value;
     }
   });
 
-  // Clicks: tabs / collapsible / buttons (.00, Save, Calculate)
   document.addEventListener("click", async (e)=>{
     const t = e.target;
 
-    // Tabs
     if (t.classList.contains("tab")) return activateTab(t.id);
 
-    // Collapsible headers
     if (t.id.startsWith("constHdr-") || t.closest(".collapsible-toggle")){
       const hdr = t.id ? t : t.closest(".collapsible-toggle");
       const m = hdr.id.replace("constHdr-","");
@@ -314,41 +298,61 @@
       return;
     }
 
-    // .00 pill
+    // Clear lasers
+    if (t.id.startsWith("clear-")){
+      const m = t.id.replace("clear-","");
+      for (let i=0;i<FIELDS;i++){
+        state.data[m].val[i] = "";
+        const el = $(`#val${i+1}-${m}`);
+        if (el){ el.value=""; el.style.borderColor="#D1D5DB"; }
+      }
+      const btn = $(`#calc-${m}`); btn && (btn.disabled = true);
+      // keep focus on first field after clear (optional)
+      const first = $(`#val1-${m}`); if (first){ first.focus(); activeInput = first; }
+      return;
+    }
+
+    // .00 pill: append 00 and move focus to NEXT laser (stay on last)
     if (t.id.startsWith("chip00-")){
       const m = t.id.replace("chip00-","");
       let target = activeInput;
       const panel = $(`#panel-${m}`);
       const isLaserHere = target && panel.contains(target) && /^val\d+-/.test(target.id);
       if (!isLaserHere){ target = $(`#val1-${m}`); if (!target) return; activeInput = target; }
+
       let digits = String(target.value||"").replace(/\D/g,"");
       digits = (digits + "00").slice(0, MAX_DIGITS);
       target.value = bankFormat(digits);
-      const i = parseInt(target.id.match(/^val(\d+)-/)[1],10)-1;
-      state.data[m].val[i] = target.value;
+
+      const curIdx = parseInt(target.id.match(/^val(\d+)-/)[1],10)-1;
+      state.data[m].val[curIdx] = target.value;
       const btn = $(`#calc-${m}`); btn && (btn.disabled = !allLasersValid(m));
+
+      // move focus to next laser if not the last
+      if (curIdx < FIELDS - 1){
+        const next = $(`#val${curIdx+2}-${m}`);
+        if (next){ next.focus(); activeInput = next; }
+      }
       return;
     }
 
-    // Save Constants
     if (t.id.startsWith("save-")){
       const m = t.id.replace("save-","");
-      // normalize + mirror local
       for (let i=0;i<FIELDS;i++){
         const el = $(`#const${i+1}-${m}`);
         el.value = bankFormat(el.value);
         state.data[m].const[i] = el.value;
       }
-      pushLocalConst(m, state.data[m].const);
       // optimistic UI
       const now = new Date(); state.data[m].lastUpdated = now;
       setStatus(m, `Updated ${fmtDate(now)}`); t.textContent="Saved ✓"; setTimeout(()=> t.textContent="Save Constants",1500);
-      // background save
-      const ok = await saveConstants(m); if (!ok) setStatus(m, "Cloud save failed (saved locally).");
+      // background save + local mirror
+      const ok = await saveConstants(m);
+      if (!ok) setStatus(m, "Cloud save failed (saved locally).");
+      else     pushLocalConst(m, state.data[m].const);
       return;
     }
 
-    // Calculate
     if (t.id.startsWith("calc-")){
       const m = t.id.replace("calc-","");
       recalc(m);
@@ -357,7 +361,6 @@
     }
   });
 
-  // Keyboard on tabs (left/right)
   document.addEventListener("keydown",(e)=>{
     if (!["ArrowLeft","ArrowRight"].includes(e.key)) return;
     const tabs = $$(".tab"); const idx = tabs.indexOf(document.activeElement);
@@ -369,15 +372,15 @@
 
   /******** Init ********/
   async function init(){
-    // seed constants from local mirror for quick paint
+    // quick paint from local constants
     MACHINES.forEach(m=> state.data[m].const = pullLocalConst(m));
-    // load cloud constants & lasers, then render
     await Promise.all(MACHINES.flatMap(m=>[loadConstants(m), loadLasers(m)]));
-    renderAll();
+    $("#app").innerHTML = MACHINES.map(renderMachine).join("");
 
     // Deep link ?m=
-    const m = qsMachine() || "J95";
-    state.current = m; activateTab(`tab-${m}`);
+    const urlM = (new URLSearchParams(location.search).get("m")||"J95").toUpperCase();
+    state.current = MACHINES.includes(urlM) ? urlM : "J95";
+    activateTab(`tab-${state.current}`);
   }
   init();
 </script>
